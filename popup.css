@@ -1,0 +1,288 @@
+body {
+  font-family: Arial, sans-serif;
+  width: 350px;
+  margin: 0;
+  /* padding: 20px; */
+  background: #f4f4f4;
+}
+
+.container {
+  background: #fff;
+  padding: 10px;
+  /* border-radius: 8px; */
+  /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
+}
+
+h2 {
+  color: #333;
+}
+
+.chat-box {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px 8px 0 0;
+  padding: 10px;
+  background: #f9f9f9;
+  position: relative;
+  display: none;
+}
+
+.visible {
+  display: block;
+}
+
+.fade-out {
+  animation: fadeOut 0.5s ease forwards;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.chat-box li {
+  list-style: none;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+}
+
+.chat-box .placeholder {
+  background: #e0e0e0;
+  color: #555;
+  padding: 10px 15px;
+  border-radius: 15px;
+  max-width: 70%;
+  align-self: flex-start;
+  margin-right: auto;
+  font-style: italic;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.user-message {
+  background: #007BFF;
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 15px 15px 0 15px;
+  max-width: 70%;
+  align-self: flex-end;
+  margin-left: auto;
+  position: relative;
+}
+
+.ai-message {
+  background: #e0e0e0;
+  color: #333;
+  padding: 10px 15px;
+  border-radius: 15px 15px 15px 0;
+  max-width: 70%;
+  align-self: flex-start;
+  margin-right: auto;
+  position: relative;
+}
+
+.message-text {
+  word-wrap: break-word;
+}
+
+.button-container {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+  position: absolute;
+  bottom: 5px;
+  right: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.chat-box li:hover .button-container {
+  opacity: 1;
+}
+
+.copy-btn {
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 2px;
+}
+
+.copy-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: #5f6368;
+}
+
+input, select, textarea {
+  width: calc(100% - 20px);
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  resize: none;
+}
+
+.input-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  background: #fff;
+}
+
+textarea {
+  height: 80px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.bottom-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+#modelSelect {
+  padding: 10px 15px;
+  margin-right: 15px;
+  font-size: 16px;
+  border: 2px solid #007BFF;
+  border-radius: 8px;
+  background: #f9f9f9;
+  color: #333;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="%235f6368" d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+}
+
+/* On focus or hover */
+#modelSelect:hover, #modelSelect:focus {
+  border-color: #0056b3;
+  background: #eef;
+}
+
+/* Remove default arrow icon on some browsers */
+#modelSelect::-ms-expand {
+  display: none;
+}
+
+/* For modern browsers to hide default dropdown arrow */
+#modelSelect {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Dropdown container styling to add box-shadow */
+.dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+#modelSelect:focus {
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: #5f6368;
+}
+
+.icon-btn:hover svg {
+  fill: #007BFF;
+}
+
+.icon-btn:active {
+  transform: scale(0.95);
+}
+
+#loading img {
+  display: block;
+  margin: 20px auto;
+  width: 50px;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+ul li {
+  background: #ddd;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+ul li:hover {
+  background: #ccc;
+}
+
+.drag-handle {
+  cursor: grab;
+  display: flex;
+  align-items: center;
+}
+
+.delete-btn {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.prompt-text {
+  flex-grow: 1;  /* Allow text to take available space */
+  overflow-wrap: break-word; /* Break text when it overflows */
+  word-break: break-word;
+  text-align: left;
+}
