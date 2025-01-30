@@ -69,9 +69,11 @@ const ChatManager = {
     const messageContainer = document.createElement("li");
     messageContainer.classList.add(sender === "AI" ? "ai-message" : "user-message");
 
-    const messageText = document.createElement("div");
+    const messageBodyContainer = document.createElement("div");
+    const messageText = document.createElement("span");
     messageText.classList.add("message-text");
     messageText.innerText = text;
+    messageBodyContainer.appendChild(messageText);
 
     const buttonContainer = document.createElement("div");
     buttonContainer.classList.add("button-container");
@@ -79,7 +81,7 @@ const ChatManager = {
     const copyBtn = UIHelper.createCopyButton(text);
 
     buttonContainer.appendChild(copyBtn);
-    messageContainer.appendChild(messageText);
+    messageContainer.appendChild(messageBodyContainer);
     messageContainer.appendChild(buttonContainer);
 
     if (usageInfo) {
@@ -104,7 +106,7 @@ const ChatManager = {
       usageInfoContainer.appendChild(document.createTextNode(" | "));
       usageInfoContainer.appendChild(price);
 
-      messageText.appendChild(usageInfoContainer);
+      messageBodyContainer.appendChild(usageInfoContainer);
     }
 
     DOMElements.chatBox.appendChild(messageContainer);
