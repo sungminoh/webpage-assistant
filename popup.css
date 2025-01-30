@@ -20,12 +20,13 @@ h2 {
 .chat-box {
   max-height: 400px;
   overflow-y: auto;
-  border: 1px solid #ddd;
+  border: 1px solid #ccc;
   border-radius: 8px 8px 0 0;
   padding: 10px;
-  background: #f9f9f9;
+  background: #fff;
   position: relative;
   display: none;
+  margin-bottom: -1px; /* Connect with input container */
 }
 
 .visible {
@@ -140,9 +141,10 @@ input, select, textarea {
   flex-direction: column;
   align-items: stretch;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 0 0 5px 5px;
   padding: 6px;
   background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 textarea {
@@ -154,6 +156,7 @@ textarea {
   font-size: 14px;
   resize: none;
   box-sizing: border-box;
+  background: transparent;
 }
 
 .bottom-bar {
@@ -161,6 +164,8 @@ textarea {
   justify-content: space-between;
   align-items: center;
   margin-top: 6px;
+  border-top: 1px solid #eee;
+  padding-top: 6px;
 }
 
 #modelSelect {
