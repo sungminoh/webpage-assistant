@@ -328,6 +328,21 @@ document.addEventListener("DOMContentLoaded", () => {
     chrome.storage.sync.set({ selectedModel: DOMElements.modelSelect.value });
   });
 
+  DOMElements.customPromptInput.addEventListener("keyup", (e) => {
+    if (e.key === "Enter") {
+      if (e.shiftKey) {
+        // Allow default behavior for shift+enter (new line)
+        return;
+      }
+      e.preventDefault();
+      const prompt = DOMElements.customPromptInput.value.trim();
+      if (prompt) {
+        ContentProcessor.submitPrompt(prompt);
+        DOMElements.customPromptInput.value = "";
+      }
+    }
+  });
+
   DOMElements.savePromptBtn.addEventListener("click", () => {
     const prompt = DOMElements.customPromptInput.value.trim();
     if (prompt) {
