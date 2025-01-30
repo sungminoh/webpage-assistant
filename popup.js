@@ -142,9 +142,11 @@ const PromptManager = {
 // Content processing
 const ContentProcessor = {
   async submitPrompt(prompt) {
+    const selectedModel = ModelManager.getSelectedModel();
+
     const { openaiApiKey } = await chrome.storage.sync.get("openaiApiKey");
 
-    if (!openaiApiKey) {
+    if (selectedModel.type === 'openai' && !openaiApiKey) {
       alert("API Key is not set. Please configure it on the options page.");
       chrome.runtime.openOptionsPage();
       return;
@@ -152,7 +154,7 @@ const ContentProcessor = {
 
     if (!prompt) return;
 
-    const model = DOMElements.modelSelect.value;
+    // Add user message to chat
     ChatManager.addMessage("User", prompt);
     ChatManager.showPlaceholder();
 
@@ -237,7 +239,7 @@ const ContentProcessor = {
     chrome.scripting.executeScript({
       target: { tabId: tabs[0].id },
       function: processPageContent,
-      args: [prompt, model]
+      args: [prompt, selectedModel]
     });
   }
 };
@@ -302,8 +304,104 @@ const UIHelper = {
   }
 };
 
+class Model {
+  constructor(type, name, price = null) {
+    this.type = type; // 'openai' or 'ollama'
+    this.name = name;
+    this.price = price; // Price per 1K tokens in USD
+  }
+
+  serialize() {
+    // Base64 encode to handle special characters like ':'
+    return btoa(JSON.stringify({
+      type: this.type,
+      name: this.name,
+      price: this.price
+    }));
+  }
+
+  static deserialize(value) {
+    const decoded = JSON.parse(atob(value));
+    return new Model(decoded.type, decoded.name, decoded.price);
+  }
+}
+
+class ModelManager {
+  static models = [];
+
+  static getDefaultModels() {
+    const models = [
+      new Model('openai', 'gpt-4o-mini', 0.00015), // 입력 1K 토큰당 $0.00015, 출력 1K 토큰당 $0.0006
+      new Model('openai', 'gpt-4o', 0.005), // 입력 1K 토큰당 $0.005, 출력 1K 토큰당 $0.015
+      new Model('openai', 'gpt-3.5-turbo', 0.002), // 입력 1K 토큰당 $0.002, 출력 1K 토큰당 $0.002
+      new Model('openai', 'o1-preview', 0.015), // 입력 1K 토큰당 $0.015, 출력 1K 토큰당 $0.06
+      new Model('openai', 'o1-mini', 0.0075), // 입력 1K 토큰당 $0.0075, 출력 1K 토큰당 $0.03
+    ];
+    return models;
+  }
+
+  static async fetchOllamaModels() {
+    try {
+      const response = await fetch('http://localhost:11434/api/tags');
+      const data = await response.json();
+      return data.models.map(m => new Model('ollama', m.name, 0)); // Local models are free
+    } catch (error) {
+      console.error('Error fetching Ollama models:', error);
+      return [];
+    }
+  }
+
+  static async loadModels() {
+    // Always start with default models
+    ModelManager.models = ModelManager.getDefaultModels();
+
+    try {
+      // Fetch Ollama models asynchronously
+      const ollamaModels = await ModelManager.fetchOllamaModels();
+      ModelManager.models = [...ModelManager.models, ...ollamaModels];
+    } catch (error) {
+      console.error('Error loading Ollama models:', error);
+      // Default models are already loaded, so continue
+    }
+
+    ModelManager.updateModelSelectOptions();
+    await ModelManager.restoreSavedModel();
+  }
+
+  static updateModelSelectOptions() {
+    if (!DOMElements.modelSelect) return;
+
+    DOMElements.modelSelect.innerHTML = '';
+
+    ModelManager.models.forEach(model => {
+      const option = document.createElement('option');
+      option.value = model.serialize();
+      const priceText = model.price === 0 ? 'Free' : 
+                       `$${model.price}/1K tokens`;
+      option.textContent = `${model.name} (${model.type}) - ${priceText}`;
+      DOMElements.modelSelect.appendChild(option);
+    });
+  }
+
+  static async restoreSavedModel() {
+    const data = await chrome.storage.sync.get(['selectedModel']);
+    if (data.selectedModel && DOMElements.modelSelect) {
+      DOMElements.modelSelect.value = data.selectedModel;
+    }
+  }
+
+  static saveSelectedModel() {
+    chrome.storage.sync.set({ selectedModel: DOMElements.modelSelect.value });
+  }
+
+  static getSelectedModel() {
+    const selectedValue = DOMElements.modelSelect.value;
+    return Model.deserialize(selectedValue);
+  }
+}
+
 // Initialize application
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   // Initialize DOM elements
   DOMElements.chatBox = document.getElementById("chat");
   DOMElements.modelSelect = document.getElementById("modelSelect");
@@ -323,10 +421,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Event listeners
-  DOMElements.modelSelect.addEventListener("change", () => {
-    chrome.storage.sync.set({ selectedModel: DOMElements.modelSelect.value });
-  });
+  // Initialize model selection
+  await ModelManager.loadModels();
+  DOMElements.modelSelect.addEventListener("change", () => ModelManager.saveSelectedModel());
 
   DOMElements.customPromptInput.addEventListener("keyup", (e) => {
     if (e.key === "Enter") {
