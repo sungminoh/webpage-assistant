@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveBtn = document.getElementById("saveBtn");
   const status = document.getElementById("status");
 
-  const DEFAULT_PROMPT = `I'm giving you webpage content. Answer based on that.`; // Default value
+  const DEFAULT_PROMPT = `I'm giving you webpage content in json format. Answer based on that.`; // Default value
 
   // Load saved values from Chrome storage
   chrome.storage.sync.get(["openaiApiKey", "anthropicApiKey", "basePrompt"], (data) => {
