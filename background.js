@@ -1,7 +1,10 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "summarize") {
-    chrome.storage.sync.get(["openaiApiKey", "basePrompt", "chatHistory"], async (data) => {
-      if (!data.openaiApiKey) {
+    chrome.storage.sync.get(["openaiApiKey", "anthropicApiKey", "basePrompt", "chatHistory"], async (data) => {
+
+      const modelType = request.model.type;
+      if ((modelType == "openai" && !data.openaiApiKey)
+        || (modelType == "anthropic" && !data.anthropicApiKey)) {
         console.error("API Key is missing.");
         chrome.runtime.sendMessage({ action: "summary_result", summary: "Error: API Key not set." });
         return;
@@ -13,12 +16,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         let historyText = chatHistory.map(entry => `${entry.sender}: ${entry.text}`).join("\n");
         const systemPrompt = `${data.basePrompt}\n\nWebpage:\n${request.content}`;
 
-        const userPrompt = `${historyText}\nUser: ${request.prompt}`;
+        const userPrompt = `${historyText}`;
         console.log("System Prompt:", systemPrompt);
         console.log("User Prompt:", userPrompt);
 
         try {
-          const summary = await askAi(data.openaiApiKey, request.model, systemPrompt, userPrompt);
+          let summary;
+          if (modelType === "openai") {
+            summary = await callOpenAI(data.openaiApiKey, request.model.name, systemPrompt, userPrompt);
+          } else if (modelType === "anthropic") {
+            console.log(data)
+            summary = await callAnthropic(data.anthropicApiKey, request.model.name, systemPrompt, userPrompt);
+          }
           chrome.runtime.sendMessage({ action: "summary_result", summary });
         } catch (error) {
           console.error("Error calling OpenAI API:", error);
@@ -61,6 +70,32 @@ async function callOpenAI(apiKey, modelName, systemPrompt, userPrompt) {
   return new AiResponse(content, usage.prompt_tokens || 0, usage.completion_tokens || 0);
 }
 
+async function callAnthropic(apiKey, modelName, systemPrompt, userPrompt) {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": apiKey,
+      "Content-Type": "application/json",
+      "anthropic-version": "2023-06-01",
+      // Include the following header only if making requests from a browser environment:
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: modelName,
+      system: systemPrompt,
+      messages: [
+        { role: "user", content: userPrompt }
+      ],
+      max_tokens: 300
+    })
+  });
+
+  const data = await response.json();
+  const content = data.content[0].text;
+  const usage = data.usage || {};
+  return new AiResponse(content, usage.input_tokens || 0, usage.output_tokens || 0);
+}
+
 async function callOllama(modelName, systemPrompt, userPrompt) {
   const response = await fetch("http://localhost:11434/api/generate", {
     method: "POST",
@@ -76,16 +111,6 @@ async function callOllama(modelName, systemPrompt, userPrompt) {
 
   const data = await response.json();
   return new AiResponse(data.response, data.prompt_eval_count, data.eval_count); // Local models are free
-}
-
-async function askAi(apiKey, model, systemPrompt, userPrompt) {
-  if (model.type === 'openai') {
-    return await callOpenAI(apiKey, model.name, systemPrompt, userPrompt);
-  } else if (model.type === 'ollama') {
-    return await callOllama(model.name, systemPrompt, userPrompt);
-  }
-
-  throw new Error(`Unsupported model type: ${model.type}`);
 }
 
 // Listen for installed event to set default model
