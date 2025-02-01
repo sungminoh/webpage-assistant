@@ -606,6 +606,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   const domSelectManager = new DomSelectManager();
+  domSelectManager.toggle.bind(domSelectManager)
   DOMElements.activateSelectionBtn.addEventListener("click", domSelectManager.toggle.bind(domSelectManager));
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -664,7 +665,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   chrome.storage.local.get("selectedHTML", function (data) {
     document.getElementById("html-content").innerText = data.selectedHTML || "Click an element to see its HTML here.";
   });
-});
-document.addEventListener("mousedown", (event) => {
-  event.stopPropagation(); // 팝업이 닫히지 않도록 이벤트 전파 차단
 });

@@ -126,3 +126,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.storage.local.set({ selectedHTML: message.html });
   }
 });
+
+
+let loaded = false;
+
+chrome.action.onClicked.addListener((tab) => {
+  if (!loaded) {
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ["content.js"]
+    });
+
+    chrome.scripting.insertCSS({
+      target: { tabId: tab.id },
+      files: ["content.css", "popup.css", "popup.js"]
+    });
+
+    loaded = true; // Ensure it only loads once
+  }
+});

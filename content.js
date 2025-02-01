@@ -35,14 +35,14 @@ class DomSelector {
         if (this.currentElement && this.currentElement !== this.selectedElement) {
             this.clearBoundary(this.currentElement);
         }
-        
+
         if (this.currentElement !== event.target && this.selectedElement !== event.target) {
             this.currentElement = event.target;
             this.markHoverBoundary(this.currentElement);
         }
     }
 
-    handleClick(event) {
+    async handleClick(event) {
         if (!this.selectionActive) return;
         event.preventDefault();
 
@@ -60,11 +60,11 @@ class DomSelector {
                 x: event.clientX + window.scrollX,
                 y: event.clientY + window.scrollY
             };
-            
-            console.log(position.x, position.y);
-            
 
-            this.showPopup(position, event.target.outerHTML);
+            console.log(position.x, position.y);
+
+
+            this.showPopup(position);
         }
     }
 
@@ -72,11 +72,11 @@ class DomSelector {
         element.removeAttribute("data-hovered");
         element.setAttribute("data-selected", "true"); // CSS가 자동 적용됨
     }
-    
+
     markHoverBoundary(element) {
         element.setAttribute("data-hovered", "true"); // CSS가 자동 적용됨
     }
-    
+
     clearBoundary(element) {
         if (element) {
             element.removeAttribute("data-selected");
@@ -96,9 +96,9 @@ class DomSelector {
         this.popup.style.zIndex = "10000";
         this.popup.style.maxWidth = "300px";
         this.popup.innerHTML = `
-            <div id="popup-content"></div>
-            <button id="close-popup" style="margin-top:10px;">닫기</button>
-        `;
+          <div id="popup-content"></div>
+          <button id="close-popup" style="margin-top:10px;">닫기</button>
+      `;
         document.body.appendChild(this.popup);
 
         document.getElementById("close-popup").addEventListener("click", () => {
@@ -112,8 +112,8 @@ class DomSelector {
     //     this.popup.style.top = `${position.y + 10}px`;
     //     this.popup.style.display = "block";
     // }
-    showPopup(position) {
-        fetch(chrome.runtime.getURL("popup.html"))
+    async showPopup(position) {
+        await fetch(chrome.runtime.getURL("popup.html"))
             .then(response => response.text())
             .then(html => {
                 document.getElementById("popup-content").innerHTML = html;
@@ -126,9 +126,7 @@ class DomSelector {
     }
 }
 
-const domSelector = new DomSelector();
-
-chrome.runtime.onMessage.addListener(domSelector.handleToggleMessage.bind(domSelector));
-
-document.addEventListener("mouseover", domSelector.handleMouseOver.bind(domSelector));
-document.addEventListener("click", domSelector.handleClick.bind(domSelector));
+var domSelector = new DomSelector();
+domSelector.selectionActive = true;
+window.document.addEventListener("mouseover", domSelector.handleMouseOver.bind(domSelector));
+window.document.addEventListener("click", domSelector.handleClick.bind(domSelector));
