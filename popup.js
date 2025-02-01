@@ -126,20 +126,29 @@ class ChatManager {
 
 class PromptManager {
   static async renderList(prompts) {
-    DOMElements.promptList.innerHTML = prompts.map((prompt, index) => `
-      <li draggable="true" data-index="${index}">
-        ${UIHelper.createDragHandle().outerHTML}
-        ${UIHelper.createPromptText(prompt).outerHTML}
-        ${UIHelper.createDeleteButton(async () => await this.deletePrompt(index)).outerHTML}
-      </li>
-    `).join("");
+    DOMElements.promptList.innerHTML = "";
+
+    prompts.forEach((prompt, index) => {
+      const li = document.createElement("li");
+      li.draggable = true;
+      li.dataset.index = index;
+
+      const dragHandle = UIHelper.createDragHandle();
+      const promptText = UIHelper.createPromptText(prompt);
+      const deleteBtn = UIHelper.createDeleteButton(async () => await this.deletePrompt(index))
+
+      li.append(dragHandle, promptText, deleteBtn);
+      DOMElements.promptList.appendChild(li);
+    });
 
     this.initDragAndDrop();
     this.initClickHandlers(prompts);
   }
+
   static initClickHandlers(prompts) {
     DOMElements.promptList.querySelectorAll("li").forEach((li, index) => {
-      li.addEventListener("click", () => {
+      li.addEventListener("click", (event) => {
+        if (event.target.closest(".delete-btn")) return; // Prevent accidental submit on delete
         DOMElements.customPromptInput.value = prompts[index];
         ContentProcessor.submitPrompt(prompts[index]);
       });
@@ -147,7 +156,7 @@ class PromptManager {
   }
 
   static initDragAndDrop() {
-    DOMElements.promptList.querySelectorAll("li").forEach((li, index) => {
+    DOMElements.promptList.querySelectorAll("li").forEach((li) => {
       li.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", li.dataset.index));
       li.addEventListener("dragover", (e) => e.preventDefault());
       li.addEventListener("drop", (e) => {
@@ -160,7 +169,7 @@ class PromptManager {
   static async movePrompt(fromIndex, toIndex) {
     fromIndex = parseInt(fromIndex);
     toIndex = parseInt(toIndex);
-    
+
     const { savedPrompts = [] } = await StorageHelper.get(["savedPrompts"], "sync");
     if (fromIndex === toIndex || !savedPrompts.length) return;
 
@@ -168,19 +177,17 @@ class PromptManager {
     savedPrompts.splice(toIndex, 0, movedItem);
 
     await StorageHelper.set({ savedPrompts }, "sync");
-    console.log(savedPrompts)
     this.renderList(savedPrompts);
   }
 
   static async deletePrompt(index) {
     const promptItems = document.querySelectorAll("#promptList li");
     promptItems[index].classList.add("fade-out");
-    debugger;
 
     setTimeout(async () => {
       const { savedPrompts = [] } = await StorageHelper.get(["savedPrompts"], "sync");
       savedPrompts.splice(index, 1);
-      await StorageHelper.set({ savedPrompts });
+      await StorageHelper.set({ savedPrompts }, "sync");
       this.renderList(savedPrompts);
     }, 300);
   }
@@ -250,22 +257,22 @@ class ContentProcessor {
     const cleaned = dom.cloneNode(true);
     // Remove unnecessary elements
     cleaned.querySelectorAll([
-          "script",
-          "style",
-          // "iframe", 
-          "noscript",
-          // "img", 
-          "meta",
-          "link",
-          // "button", 
-          // "input", 
-          // "form", 
-          "aside",
-          ".ads",
-          ".footer",
-          ".header",
-          ".sidebar"
-        ]).forEach(el => el.remove());
+      "script",
+      "style",
+      // "iframe", 
+      "noscript",
+      // "img", 
+      "meta",
+      "link",
+      // "button", 
+      // "input", 
+      // "form", 
+      "aside",
+      ".ads",
+      ".footer",
+      ".header",
+      ".sidebar"
+    ]).forEach(el => el.remove());
 
     // Remove unnecessary attributes
     cleaned.querySelectorAll("*").forEach(el => {
@@ -297,8 +304,8 @@ class ContentProcessor {
 
     function compress(node) {
       while (node.nodeType === Node.ELEMENT_NODE &&
-             node.childNodes.length === 1 &&
-             node.firstChild.nodeType === Node.ELEMENT_NODE) {
+        node.childNodes.length === 1 &&
+        node.firstChild.nodeType === Node.ELEMENT_NODE) {
         node = node.firstChild;
       }
 
