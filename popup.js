@@ -38,7 +38,9 @@ const ChatManager = {
   saveChatHistory() {
     const messages = [...DOMElements.chatBox.children].map((li) => {
       const sender = li.classList.contains("ai-message") ? "AI" : "User";
-      const text = li.querySelector(".message-text").innerText;
+      const messageText = li.querySelector(".message-text");
+      if (!messageText) return null;
+      const text = messageText.innerText;
       const usageInfo = li.querySelector(".usage-info");
       const usage = usageInfo ? {
         inputTokens: usageInfo.querySelector(".input-tokens").innerText.split(": ")[1],
@@ -46,7 +48,7 @@ const ChatManager = {
         totalPrice: parseFloat(usageInfo.querySelector(".price").innerText.split(": ")[1].replace(/\$/, ""))
       } : null;
       return { sender, text, usage };
-    });
+    }).filter(Boolean);
     chrome.storage.local.set({ chatHistory: messages });
   },
 
@@ -310,12 +312,15 @@ const ContentProcessor = {
       }
 
       function elementToJson(element) {
-        if (element.nodeType === 3) {  // TEXT_NODE
+        if (element.nodeType === element.COMMENT_NODE) {  // Commend
+          return null;
+        }
+        if (element.nodeType === element.TEXT_NODE) {  // TEXT_NODE
           return element.textContent.trim() || null;
         }
 
         let obj = {};
-        let tag = element.tagName.toLowerCase();
+        let tag = element.tagName?.toLowerCase();
         let children = Array.from(element.childNodes)
           .map(elementToJson)
           .filter(child => child !== null);  // Remove empty text nodes
