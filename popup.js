@@ -326,7 +326,7 @@ class ContentProcessor {
 
     const tag = element.tagName?.toLowerCase();
     const children = [...element.childNodes]
-      .map(this.elementToJson)
+      .map(this.elementToJson.bind(this))
       .filter(child => child !== null);
 
     return { [tag]: [element.textContent.trim() || "", ...children] };
