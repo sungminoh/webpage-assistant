@@ -1,15 +1,3 @@
-// DOM Elements
-const DOMElements = {
-  chatBox: null,
-  modelSelect: null,
-  customPromptInput: null,
-  savePromptBtn: null,
-  submitPromptBtn: null,
-  promptList: null,
-  clearChatBtn: null,
-  activateSelectionBtn: null
-};
-
 class StorageHelper {
   static async get(keys, storageArea = 'local') {
     return new Promise((resolve) => {
@@ -29,6 +17,19 @@ class StorageHelper {
     });
   }
 }
+// DOM Elements
+const DOMElements = {
+  chatBox: null,
+  modelSelect: null,
+  customPromptInput: null,
+  savePromptBtn: null,
+  submitPromptBtn: null,
+  promptList: null,
+  clearChatBtn: null,
+  activateSelectionBtn: null
+};
+
+
 
 class ChatManager {
   static scrollToBottom() {
@@ -98,8 +99,11 @@ class ChatManager {
         ${usageInfo ? this.createUsageInfo(usageInfo) : ""}
       </div>
       <div class="button-container">
-        ${UIHelper.createCopyButton(text).outerHTML}
       </div>`;
+
+    const copyButton = UIHelper.createCopyButton(text);
+    const buttonContainer = messageContainer.querySelector(".button-container");
+    buttonContainer.appendChild(copyButton);
 
     DOMElements.chatBox.appendChild(messageContainer);
     ChatManager.scrollToBottom();
@@ -372,26 +376,30 @@ class UIHelper {
   }
 
   static createCopyButton(text) {
-    const copyBtn = UIHelper.createSVGButton("copy-btn", `
-      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
-        <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/>
-      </svg>`, () => UIHelper.handleCopy(copyBtn, text));
-    return copyBtn;
+    return UIHelper.createSVGButton("copy-btn", UIHelper.getCopyIcon(), async () => UIHelper.handleCopy(copyBtn, text));
   }
 
-  static handleCopy(btn, text) {
-    navigator.clipboard.writeText(text).then(() => {
-      btn.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
-          <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
-        </svg>`;
-      setTimeout(() => {
-        btn.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
-            <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/>
-          </svg>`;
-      }, 2000);
-    });
+  static async handleCopy(btn, text) {
+    await navigator.clipboard.writeText(text);
+    btn.innerHTML = UIHelper.getSuccessIcon();
+    setTimeout(() => {
+      btn.innerHTML = UIHelper.getCopyIcon();
+    }, 2000);
+  }
+
+  static getCopyIcon() {
+    return `
+      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
+        <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/>
+      </svg>
+    `;
+  }
+  static getSuccessIcon() {
+    return `
+      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
+        <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
+      </svg>
+    `;
   }
 }
 
