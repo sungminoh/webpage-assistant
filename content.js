@@ -120,6 +120,13 @@ class DomSelector {
                 this.popup.style.left = `${position.x + 10}px`;
                 this.popup.style.top = `${position.y + 10}px`;
                 this.popup.style.display = "block";
+                this.popup.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                });
+                this.popup.addEventListener("mouseover", (event) => {
+                    event.stopPropagation();
+                });
+
             }).catch(e => {
                 debugger;
             });
