@@ -597,7 +597,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   chrome.storage.local.get("selectedHTML", function (data) {
     if (data.selectedHTML || data.selectedHTML.trim()) {
       domSelectManager.setActive(true);
-      document.getElementById("html-content").textContent = data.selectedHTML;
+      document.getElementById("html-content").innerHTML = data.selectedHTML;
     }
   });
   DOMElements.activateSelectionBtn.addEventListener("click", domSelectManager.toggle.bind(domSelectManager));

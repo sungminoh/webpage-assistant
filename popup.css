@@ -323,102 +323,32 @@ ul li:hover {
   display: inline-block;
 }
 
-
+/* HTML Content */
+.html-container {
+  max-height: 250px;
+  overflow-y: auto;
+  border-radius: 6px;
+  background: #fff;
+  padding: 10px;
+  border: 1px solid #ddd;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.1);
+}
 
 #html-content {
   width: 100%;
-  max-height: 300px;
-  overflow-y: auto;
-  padding: 10px;
-  background: #fff;
-  border-radius: 6px;
-  border: 1px solid #ddd;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  color: #333;
-  white-space: pre-wrap;
-  word-break: break-word;
-  line-height: 1.4;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 #html-content * {
-  all: unset; /* Reset styles to avoid conflicts */
-  display: block; /* Ensure each element stacks properly */
-}
-
-#html-content p {
-  margin-bottom: 10px;
-  padding: 5px;
-}
-
-#html-content img {
+  all: revert;
   max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 10px 0;
-}
-
-#html-content a {
-  color: #007BFF;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-#html-content a:hover {
-  color: #0056b3;
-}
-
-#html-content ul, #html-content ol {
-  padding-left: 20px;
-}
-
-#html-content li {
-  margin-bottom: 5px;
-}
-
-#html-content table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-#html-content th, #html-content td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-#html-content th {
-  background: #f4f4f4;
-  font-weight: bold;
-}
-
-#html-content blockquote {
-  padding: 10px;
-  border-left: 4px solid #007BFF;
-  background: #f9f9f9;
-  margin: 10px 0;
-  font-style: italic;
-}
-
-#html-content code {
-  font-family: monospace;
-  background: #f4f4f4;
-  padding: 2px 5px;
-  border-radius: 4px;
 }
 
 #html-content pre {
-  background: #f4f4f4;
-  padding: 10px;
-  border-radius: 6px;
   overflow-x: auto;
-  font-family: monospace;
-}
-
-#html-content hr {
-  border: none;
-  border-top: 1px solid #ddd;
-  margin: 10px 0;
+  padding: 8px;
+  background: #f4f4f4;
+  border-radius: 4px;
+  white-space: pre-wrap;
 }
