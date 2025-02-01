@@ -1,6 +1,6 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "summarize") {
-    chrome.storage.sync.get(["openaiApiKey", "anthropicApiKey", "basePrompt", "chatHistory"], async (data) => {
+    chrome.storage.sync.get(["openaiApiKey", "anthropicApiKey", "basePrompt"], async (data) => {
 
       const modelType = request.model.type;
       if ((modelType == "openai" && !data.openaiApiKey)
@@ -25,7 +25,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           if (modelType === "openai") {
             summary = await callOpenAI(data.openaiApiKey, request.model.name, systemPrompt, userPrompt);
           } else if (modelType === "anthropic") {
-            console.log(data)
             summary = await callAnthropic(data.anthropicApiKey, request.model.name, systemPrompt, userPrompt);
           }
           chrome.runtime.sendMessage({ action: "summary_result", summary });
@@ -121,8 +120,8 @@ chrome.runtime.onInstalled.addListener(() => {
 
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log(message)
-  if (message.action === "open_floating_popup") {
+  if (message.action === "click_target_dom") {
     chrome.storage.local.set({ selectedHTML: message.html });
   }
 });
+
