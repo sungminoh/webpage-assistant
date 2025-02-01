@@ -117,3 +117,12 @@ async function callOllama(modelName, systemPrompt, userPrompt) {
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.set({ selectedModel: "gpt-4o" });
 });
+
+
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log(message)
+  if (message.action === "open_floating_popup") {
+    chrome.storage.local.set({ selectedHTML: message.html });
+  }
+});
