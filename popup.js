@@ -250,14 +250,36 @@ class ContentProcessor {
         return compress(element);
       }
 
-      function elementToJson(element) {
-        if (element.nodeType === Node.COMMENT_NODE) return null;
-        if (element.nodeType === Node.TEXT_NODE) return element.textContent.trim() || null;
-        const tag = element.tagName?.toLowerCase();
-        const children = [...element.childNodes]
-          .map(elementToJson)
-          .filter(child => child !== null);
-        return { [tag]: [element.textContent.trim() || "", ...children] };
+      /**
+       * Recursively converts an HTML element into a compact array format:
+       * [ tagName, [child1, child2, ...] ]
+       *
+       * - Text nodes become trimmed strings (or null if empty).
+       * - Comment nodes are dropped (return null).
+       * - Element nodes become [tagName, [ ...children ]].
+       */
+      function elementToArray(node) {
+        // 1. Ignore comment nodes
+        if (node.nodeType === Node.COMMENT_NODE) {
+          return null;
+        }
+
+        // 2. Text nodes → trimmed string (null if empty)
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.textContent.trim();
+          return text.length ? text : null;
+        }
+
+        // 3. Element nodes → [tagName, [childArray...]]
+        //    - e.g., ["div", ["Text", ["span", ["nested"]], ...]]
+        const tagName = node.tagName.toLowerCase();
+        const childArray = [...node.childNodes]
+          .map(elementToArray)     // Recursively handle children
+          .filter((child) => child !== null);  // Filter out nulls
+
+        // If there are no children, you can decide whether to store an empty array or omit it.
+        // We'll always store an array, even if it's empty, to keep the structure consistent.
+        return [tagName, childArray];
       }
 
       const targetDom = selectedHtml
@@ -265,7 +287,7 @@ class ContentProcessor {
         : document.body;
       const cleanedDom = cleanDom(targetDom);
       const compressedDom = compressDOM(cleanedDom);
-      const content = JSON.stringify(elementToJson(compressedDom));
+      const content = JSON.stringify(elementToArray(compressedDom));
 
       chrome.runtime.sendMessage({ action: "summarize", content, model, prompt });
     }
