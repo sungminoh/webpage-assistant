@@ -202,6 +202,7 @@ textarea {
   height: 32px;              /* 명시적인 높이 지정 */
   line-height: 32px;         /* 텍스트의 수직 정렬을 위해 */
   padding: 0 10px;           /* 수직 패딩 제거, 좌우 패딩 유지 */
+  margin-left: 10px;
   font-size: 14px;
   border: 1px solid var(--primary-color);
   border-radius: 5px;
