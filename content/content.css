@@ -1,0 +1,12 @@
+/* content/content.css */
+[data-selected="true"] {
+    background-color: rgba(255, 99, 71, 0.4);
+    outline: 3px solid rgba(255, 69, 0, 0.8);
+    box-shadow: 0 0 10px rgba(255, 69, 0, 0.6);
+  }
+  
+  [data-hovered="true"] {
+    background-color: rgba(173, 216, 230, 0.4);
+    outline: 2px dashed rgba(70, 130, 180, 0.7);
+    box-shadow: 0 0 6px rgba(70, 130, 180, 0.5);
+  }

@@ -1,3 +1,4 @@
+// options/options.js
 document.addEventListener("DOMContentLoaded", () => {
   const openaiApiKeyInput = document.getElementById("openaiApiKeyInput");
   const anthropicApiKeyInput = document.getElementById("anthropicApiKeyInput");
@@ -5,7 +6,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveBtn = document.getElementById("saveBtn");
   const status = document.getElementById("status");
 
-  // Load saved values from Chrome storage
   chrome.storage.sync.get(["openaiApiKey", "anthropicApiKey", "basePrompt"], (data) => {
     if (data.openaiApiKey) {
       openaiApiKeyInput.value = data.openaiApiKey;
@@ -13,18 +13,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (data.anthropicApiKey) {
       anthropicApiKeyInput.value = data.anthropicApiKey;
     }
-
-    // Set default prompt if no value exists in storage
-    // basePromptInput.value = data.basePrompt || DEFAULT_PROMPT;
+    if (data.basePrompt) {
+      basePromptInput.value = data.basePrompt;
+    }
   });
 
-  // Save API keys and base prompt to Chrome storage
   saveBtn.addEventListener("click", () => {
     const openaiApiKey = openaiApiKeyInput.value.trim();
     const anthropicApiKey = anthropicApiKeyInput.value.trim();
-    const basePrompt = basePromptInput.value.trim(); // Use default if empty
+    const basePrompt = basePromptInput.value.trim();
 
-    chrome.storage.sync.set({ openaiApiKey: openaiApiKey, anthropicApiKey: anthropicApiKey, basePrompt: basePrompt }, () => {
+    chrome.storage.sync.set({ openaiApiKey, anthropicApiKey, basePrompt }, () => {
       status.textContent = "Settings saved successfully!";
       status.style.color = "green";
       setTimeout(() => { status.textContent = ""; }, 3000);
