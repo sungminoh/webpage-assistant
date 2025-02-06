@@ -21,7 +21,6 @@ const DOMElements = {
 };
 
 // 전역 객체(예: ChatManager, DomSelectManager 등)
-let chatManager = null;
 let domSelectManager = null;
 
 /**
@@ -71,7 +70,7 @@ function setupEventListeners() {
   DOMElements.clearChatBtn.addEventListener("click", clearChat);
 
   // 채팅 박스 스크롤 시 현재 위치 저장
-  DOMElements.chatBox.addEventListener("scroll", chatManager.saveScrollPosition);
+  DOMElements.chatBox.addEventListener("scroll", chatManager.saveScrollPosition.bind(chatManager));
 
   // 백그라운드 및 다른 스크립트의 메시지 수신 처리
   chrome.runtime.onMessage.addListener(handleIncomingMessages);
@@ -126,16 +125,18 @@ function clearChat() {
  * (예: "summary_result" 메시지를 받아 AI 응답을 채팅에 추가)
  */
 function handleIncomingMessages(message) {
-  if (message.action === "summary_result") {
+  // 스트림 방식 응답 청크 처리
+  if (message.action === "stream_update") {
+    // chatManager 인스턴스는 전역 또는 initializeApp 내부에서 생성되어 있어야 합니다.
+    chatManager.appendToLastAiMessage(message.chunk);
+  } else if (message.action === "summary_result") {
     const selectedModel = ModelManager.getSelectedModel();
-    // message.summary가 AiResponse 객체이거나 단순 텍스트인 경우에 맞게 처리
     if (selectedModel && message.summary) {
       chatManager.addAiResponseMessage(message.summary, selectedModel);
     }
     chatManager.removePlaceholder();
     chatManager.saveChatHistory();
   }
-  // (stream_update 등의 메시지도 필요 시 추가 처리)
 }
 
 /**
