@@ -1,10 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "Web Page Summarizer",
+  "name": "Web Page Assistant",
   "version": "1.1",
-  "description": "Summarize the current webpage using OpenAI API",
-  "permissions": ["activeTab", "scripting", "storage"],
-  "host_permissions": ["<all_urls>"],
+  "description": "Read the current webpage using AI",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
     "service_worker": "background.js"
   },
@@ -24,9 +30,24 @@
   "options_page": "options/options.html",
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content/content.js"],
-      "css": ["content/content.css"]
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content/content.js"
+      ],
+      "css": [
+        "content/content.css"
+      ]
     }
-  ]
+  ],
+  "commands": {
+    "toggle_selector": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Toggle Dom Selector"
+    }
+  }
 }

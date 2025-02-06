@@ -210,3 +210,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.action.openPopup();
   }
 });
+
+chrome.commands.onCommand.addListener((command) => {
+  if (command === "open_popup") {
+    chrome.action.openPopup();
+  } else if (command === "toggle_selector") {
+    // Query the active tab in the current window
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs.length === 0) return; // No active tab found.
+      chrome.tabs.sendMessage(tabs[0].id, { action: "toggleDomSelector", active: true }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.warn(chrome.runtime.lastError.message);
+        } else {
+          console.log("Response:", response);
+        }
+      });
+    });
+  }
+});
