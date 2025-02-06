@@ -105,8 +105,8 @@ async function callOpenAI(apiKey, modelName, systemPrompt, userPrompt, stream = 
     const decoder = new TextDecoder("utf-8");
     let done = false;
     let fullContent = "";
-    let totalInputTokens = 0;
-    let totalOutputTokens = 0;
+    let totalInputTokens = null;
+    let totalOutputTokens = null;
 
     // Read stream chunks
     while (!done) {
