@@ -16,13 +16,13 @@ The HTML is provided in the form:
 `.trim();
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "summarize") {
+  if (request.action === "ask_ai") {
     chrome.storage.sync.get(["openaiApiKey", "anthropicApiKey", "basePrompt"], async (data) => {
       const modelType = request.model.type;
       if ((modelType === "openai" && !data.openaiApiKey) ||
         (modelType === "anthropic" && !data.anthropicApiKey)) {
         console.error("API Key is missing.");
-        chrome.runtime.sendMessage({ action: "summary_result", summary: "Error: API Key not set." });
+        chrome.runtime.sendMessage({ action: "response_result", summary: "Error: API Key not set." });
         return;
       }
 
@@ -51,7 +51,7 @@ Answer to the user's latest message.
             summary = await callAnthropic(data.anthropicApiKey, request.model.name, SYSTEM_PROMPT, prompt);
           }
           // When the stream is finished, send a final message with the full response.
-          chrome.runtime.sendMessage({ action: "summary_result", summary });
+          chrome.runtime.sendMessage({ action: "response_result", summary });
         } catch (error) {
           console.error("Error calling API:", error);
           chrome.runtime.sendMessage({ action: "summary_result", summary: "Error: Failed to fetch summary." });

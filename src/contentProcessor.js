@@ -73,7 +73,7 @@ class ContentProcessor {
       const compressedDom = compressDOM(cleanedDom);
       const content = JSON.stringify(elementToArray(compressedDom));
 
-      chrome.runtime.sendMessage({ action: "summarize", content, model, prompt });
+      chrome.runtime.sendMessage({ action: "ask_ai", content, model, prompt });
     }
 
     if (selectedHTML) {
