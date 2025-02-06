@@ -2,35 +2,39 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Web Page Summarizer</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div class="container">
-    <div class="html-container">
+    <!-- HTML 선택 미리보기 영역 -->
+    <div class="html-container" style="margin-bottom: 10px; border: 1px solid #ddd; padding: 10px; border-radius: 6px;">
       <div id="html-content"></div>
     </div>
+    <!-- 채팅 영역 -->
     <div id="chat" class="chat-box"></div>
+    <!-- 입력 영역 -->
     <div class="input-container">
       <div class="top-bar">
         <div class="button-group">
-          <button id="activateSelectionBtn" class="icon-btn">
+          <button id="activateSelectionBtn" class="icon-btn" aria-label="Activate DOM selection">
+            <!-- SVG 아이콘 -->
             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
               <path d="M440-120v-400h400v80H576l264 264-56 56-264-264v264h-80Zm-160 0v-80h80v80h-80Zm-80-640h-80q0-33 23.5-56.5T200-840v80Zm80 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80q33 0 56.5 23.5T840-760h-80ZM200-200v80q-33 0-56.5-23.5T120-200h80Zm-80-80v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm640 0v-80h80v80h-80Z"/>
             </svg>
           </button>
-          <button id="clearChatBtn" class="icon-btn">
+          <button id="clearChatBtn" class="icon-btn" aria-label="Clear chat">
             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
               <path d="M600-240v-80h160v80H600Zm0-320v-80h280v80H600Zm0 160v-80h240v80H600ZM120-640H80v-80h160v-60h160v60h160v80h-40v360q0 33-23.5 56.5T440-200H200q-33 0-56.5-23.5T120-280v-360Zm80 0v360h240v-360H200Zm0 0v360-360Z"/>
             </svg>
           </button>
-          <button id="savePromptBtn" class="icon-btn">
+          <button id="savePromptBtn" class="icon-btn" aria-label="Save prompt">
             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
               <path d="M840-680v480q0 33-23.5 56.5T760-120H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h480l160 160Zm-80 34L646-760H200v560h560v-446ZM480-240q50 0 85-35t35-85q0-50-35-85t-85-35q-50 0-85 35t-35 85q0 50 35 85t85 35ZM240-560h360v-160H240v160Z"/>
             </svg>
           </button>
-          <button id="submitPromptBtn" class="icon-btn">
+          <button id="submitPromptBtn" class="icon-btn" aria-label="Send prompt">
             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
               <path d="m380-300 280-180-280-180v360ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/>
             </svg>
@@ -42,7 +46,11 @@
     </div>
     <ul id="promptList"></ul>
   </div>
-  <!-- <script src="popup.js"></script> -->
+  <!-- 테마 토글 버튼 예시 -->
+  <button id="themeToggleBtn" class="icon-btn" aria-label="Toggle dark/light theme" style="position: absolute; top: 10px; right: 10px;">
+    <!-- 간단한 텍스트 아이콘 -->
+    <span>🌙</span>
+  </button>
   <script type="module" src="app.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-/* options/options.css */
+/* options.css */
 body {
   font-family: Arial, sans-serif;
   max-width: 400px;
@@ -8,50 +8,51 @@ body {
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   text-align: center;
+  color: #333;
 }
 
 h2 {
-  text-align: center;
-  color: #333;
+  margin-bottom: 20px;
 }
 
 label {
   font-weight: bold;
   display: block;
-  margin-top: 10px;
+  margin-top: 15px;
   text-align: left;
 }
 
 input, textarea {
-  width: calc(100% - 20px);
+  width: 100%;
   padding: 10px;
   margin-top: 5px;
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 16px;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
+  box-sizing: border-box;
 }
 
 button {
   width: 100%;
   padding: 10px;
-  background-color: #007BFF;
-  color: white;
+  background-color: #007bff;
+  color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-size: 18px;
   margin-top: 20px;
+  transition: background-color 0.3s ease;
 }
 
 button:hover {
   background-color: #0056b3;
 }
 
-#status {
-  text-align: center;
-  margin-top: 15px;
-  font-weight: bold;
+/* 반응형 디자인 */
+@media (max-width: 400px) {
+  body {
+    margin: 20px;
+    padding: 15px;
+  }
 }

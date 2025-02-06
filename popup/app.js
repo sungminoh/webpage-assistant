@@ -161,12 +161,34 @@ function cleanup() {
   // 추가적으로 필요한 정리 작업(예: 이벤트 리스너 제거 등)
 }
 
+function applyTheme() {
+  // 저장된 테마를 로드하여 document에 적용합니다.
+  chrome.storage.sync.get("theme", (data) => {
+    if (data.theme) {
+      document.documentElement.setAttribute("data-theme", data.theme);
+    }
+  });
+
+  // HTML에 테마 토글 버튼이 있다고 가정 (예: id="themeToggleBtn")
+  const themeToggleButton = document.getElementById("themeToggleBtn");
+  if (themeToggleButton) {
+    themeToggleButton.addEventListener("click", () => {
+      const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+      const newTheme = currentTheme === "light" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", newTheme);
+      chrome.storage.sync.set({ theme: newTheme });
+    });
+  }
+};
+
+
 /**
  * 앱 초기화 함수
  */
 async function initializeApp() {
   // 1. DOM 요소 초기화
   initializeDOMElements();
+  applyTheme();
 
   // 2. 저장된 데이터(프롬프트, 모델 등) 로드
   await loadSavedData();
