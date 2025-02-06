@@ -1,8 +1,6 @@
 // popup/app.js
 import { StorageHelper } from "../src/storageHelper.js";
 import { chatManager } from "../src/chatManager.js";
-import { ApiService } from "../src/apiService.js";
-import { UIHelper } from "../src/uiHelper.js";
 import { ModelManager } from "../src/modelManager.js";
 import { PromptManager } from "../src/promptManager.js";
 import { ContentProcessor } from "../src/contentProcessor.js";
