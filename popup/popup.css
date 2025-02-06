@@ -36,6 +36,16 @@ body {
   box-sizing: border-box;
 }
 
+/* HTML 미리보기 영역: 선택 영역 크기를 제한 */
+.html-container {
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  margin-bottom: 10px;
+  padding: 6px;
+}
+
 /* ===== 헤더 및 타이틀 ===== */
 h2 {
   color: var(--text-color);
@@ -184,8 +194,14 @@ textarea {
   transform: scale(0.95);
 }
 
+/* #modelSelect에 box-sizing, min-width, flex-grow 적용 */
 #modelSelect {
-  padding: 6px 10px;
+  flex-grow: 1;
+  min-width: 0; /* 컨테이너에 맞게 축소 */
+  box-sizing: border-box;
+  height: 32px;              /* 명시적인 높이 지정 */
+  line-height: 32px;         /* 텍스트의 수직 정렬을 위해 */
+  padding: 0 10px;           /* 수직 패딩 제거, 좌우 패딩 유지 */
   font-size: 14px;
   border: 1px solid var(--primary-color);
   border-radius: 5px;
@@ -246,7 +262,7 @@ textarea {
 }
 
 /* ===== 반응형 디자인 ===== */
-@media (max-width: 600px) {
+@media (max-width: 300px) {
   body {
     width: 100%;
   }

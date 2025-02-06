@@ -41,6 +41,7 @@ ${historyText}
 
 Answer to the user's latest message.
 `.trim();
+        console.log(prompt)
         try {
           let summary;
           if (modelType === "openai") {

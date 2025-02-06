@@ -5,7 +5,6 @@ import { ModelManager } from "./modelManager.js";
 
 class ContentProcessor {
   static async submitPrompt(prompt) {
-    debugger;
     if (!prompt) return;
 
     const selectedModel = ModelManager.getSelectedModel();

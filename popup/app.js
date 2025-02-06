@@ -17,7 +17,8 @@ const DOMElements = {
   submitPromptBtn: document.getElementById("submitPromptBtn"),
   promptList: document.getElementById("promptList"),
   clearChatBtn: document.getElementById("clearChatBtn"),
-  activateSelectionBtn: document.getElementById("activateSelectionBtn")
+  activateSelectionBtn: document.getElementById("activateSelectionBtn"),
+  settingsBtn: document.getElementById("settingsBtn")
 };
 
 // 전역 객체(예: ChatManager, DomSelectManager 등)
@@ -49,9 +50,6 @@ async function loadSavedData() {
  * 이벤트 핸들러들을 등록하는 함수
  */
 function setupEventListeners() {
-  // 모델 선택 변경 시 (저장)
-  DOMElements.modelSelect.addEventListener("change", ModelManager.saveSelectedModel);
-
   // 프롬프트 입력: 엔터키 제출 (Shift+Enter로 줄바꿈 허용)
   DOMElements.customPromptInput.addEventListener("keyup", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -74,6 +72,11 @@ function setupEventListeners() {
 
   // 백그라운드 및 다른 스크립트의 메시지 수신 처리
   chrome.runtime.onMessage.addListener(handleIncomingMessages);
+
+  // 설정 버튼 클릭 시 옵션 페이지 열기
+  DOMElements.settingsBtn.addEventListener("click", () => {
+    chrome.runtime.openOptionsPage();
+  });
 
   // 페이지 언로드 전 정리 작업
   window.addEventListener("beforeunload", cleanup);
@@ -159,6 +162,7 @@ function initializeDomSelector() {
 function cleanup() {
   console.log("Cleaning up before unload...");
   // 추가적으로 필요한 정리 작업(예: 이벤트 리스너 제거 등)
+  chatManager.saveChatHistory();
 }
 
 function applyTheme() {
