@@ -31,13 +31,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         let chatHistory = historyData.chatHistory || [];
         let historyText = chatHistory.map(entry => `${entry.sender}: ${entry.text}`).join("\n");
         const prompt = `
-### **Compressed HTML Representation:**  
+### **Compressed HTML Representation:**
 ${request.content}
 
-### **Custom Instructions:**  
+### **Custom Instructions:**
 ${request.basePrompt}
 
-### **Conversation History:**  
+### **Conversation History:**
 ${historyText}
 
 Answer to the user's latest message.
@@ -217,8 +217,31 @@ chrome.commands.onCommand.addListener((command) => {
     chrome.action.openPopup();
   } else if (command === "toggle_selector") {
     // Query the active tab in the current window
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+
+    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
       if (tabs.length === 0) return; // No active tab found.
+
+      // Check if DomSelector already exists in the tab
+      const tab = tabs[0]
+      const [result] = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => typeof window.DomSelector !== "undefined",
+      });
+
+      if (result?.result) {
+        console.log("DomSelector is already injected.");
+        chrome.tabs.sendMessage(tab.id, { action: "toggleDomSelector" });
+      } else {
+        console.log("Injecting content script...");
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ["content/content.js"],
+        });
+        await chrome.scripting.insertCSS({
+          target: { tabId: tab.id },
+          files: ["content/content.css"]
+        });
+      }
       chrome.tabs.sendMessage(tabs[0].id, { action: "toggleDomSelector", active: true }, (response) => {
         if (chrome.runtime.lastError) {
           console.warn(chrome.runtime.lastError.message);
