@@ -21,7 +21,7 @@ class DomSelector {
         // Hide overlay, ESC menu, and preview box
         this.overlay.style.display = "none";
         this.escMenu.style.display = "none";
-        this.previewBox.style.display = "none";
+        // this.previewBox.style.display = "none";
     }
 
     handleKeydown(event) {
@@ -62,7 +62,7 @@ class DomSelector {
         if (this.selectedElement === event.target) {
             this.clearBoundary(this.selectedElement);
             this.selectedElement = null;
-            this.previewBox.style.display = "none"; // Hide preview when deselected
+            // this.previewBox.style.display = "none"; // Hide preview when deselected
         } else {
             if (this.selectedElement) {
                 this.clearBoundary(this.selectedElement);
