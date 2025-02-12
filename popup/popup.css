@@ -1,9 +1,37 @@
 /* ===== Global Variables ===== */
 /* You can merge these with your theme-specific variables */
 :root {
+  --bg-color: #ffffff;
+  --container-bg: #f7f7f7;
+  --primary-color: #007bff;
+  --secondary-color: #6c757d; /* Neutral gray */
+  --third-color: #28a745;     /* Green accent */
+  --fourth-color: #fd7e14;    /* Orange accent */
+  --fifth-color: #dc3545;     /* Red accent */
+  --text-color: #333333;
+  --border-color: #cccccc;
+  --secondary-text-color: #555555;
+  --code-bg: #e8e8e8;
+  --placeholder-bg: #f0f0f0;
+  --ai-bg: #e0e0e0;
+  --fade-duration: 0.3s;
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --code-font: 'Fira Code', monospace;
+  --btn-padding: 2px 4px;
+  --btn-size: 18px;
+  --topbar-btn-size: 24px;
+  --topbar-btn-padding: 4px;
+  --container-width: 500px;
+}
+
+[data-theme="dark"] {
   --bg-color: #282c34;
   --container-bg: #21252b;
   --primary-color: #61afef;
+  --secondary-color: #e06c75; /* Muted red */
+  --third-color: #98c379;     /* Muted green */
+  --fourth-color: #e5c07b;     /* Warm yellow */
+  --fifth-color: #c678dd;      /* Soft purple */
   --text-color: #abb2bf;
   --border-color: #3e4451;
   --secondary-text-color: #5c6370;
@@ -15,17 +43,88 @@
   --code-font: 'Fira Code', monospace;
   --btn-padding: 2px 4px;
   --btn-size: 18px;
-  /* Variables for top-bar controls */
   --topbar-btn-size: 24px;
   --topbar-btn-padding: 4px;
-  /* New variables for code backgrounds and other elements */
+  --container-width: 500px;
+}
+
+[data-theme="pastel"] {
+  --bg-color: #fffaf6;          /* Soft cream */
+  --container-bg: #fdf5e6;       /* Old lace */
+  --primary-color: #a3d2ca;      /* Pastel green-blue */
+  --secondary-color: #f5a623;    /* Soft orange */
+  --third-color: #f8e71c;        /* Soft yellow */
+  --fourth-color: #50e3c2;       /* Pastel teal */
+  --fifth-color: #9013fe;        /* Soft purple */
+  --text-color: #555555;
+  --border-color: #e0d6c6;
+  --secondary-text-color: #8d8d8d;
+  --code-bg: #e6e6fa;            /* Light lavender */
+  --placeholder-bg: #f7e7d2;
+  --ai-bg: #d9e8c7;
+  --fade-duration: 0.3s;
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --code-font: 'Fira Code', monospace;
+  --btn-padding: 2px 4px;
+  --btn-size: 18px;
+  --topbar-btn-size: 24px;
+  --topbar-btn-padding: 4px;
+  --container-width: 500px;
+}
+
+[data-theme="neon"] {
+  --bg-color: #000000;
+  --container-bg: #121212;
+  --primary-color: #39ff14;     /* Neon green */
+  --secondary-color: #ff073a;   /* Neon red */
+  --third-color: #0ff0fc;       /* Neon cyan */
+  --fourth-color: #fffb00;      /* Neon yellow */
+  --fifth-color: #ff00ff;       /* Neon magenta */
+  --text-color: #e0e0e0;
+  --border-color: #333333;
+  --secondary-text-color: #aaaaaa;
+  --code-bg: #1e1e1e;
+  --placeholder-bg: #333333;
+  --ai-bg: #222222;
+  --fade-duration: 0.3s;
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --code-font: 'Fira Code', monospace;
+  --btn-padding: 2px 4px;
+  --btn-size: 18px;
+  --topbar-btn-size: 24px;
+  --topbar-btn-padding: 4px;
+  --container-width: 500px;
+}
+
+[data-theme="contrast"] {
+  --bg-color: #000000;
+  --container-bg: #1a1a1a;
+  --primary-color: #ffea00;     /* Bright yellow */
+  --secondary-color: #00ff00;   /* Bright green */
+  --third-color: #00ffff;       /* Bright cyan */
+  --fourth-color: #ff00ff;      /* Bright magenta */
+  --fifth-color: #ff0000;       /* Bright red */
+  --text-color: #ffffff;
+  --border-color: #ffffff;
+  --secondary-text-color: #cccccc;
+  --code-bg: #2a2a2a;
+  --placeholder-bg: #333333;
+  --ai-bg: #000000;
+  --fade-duration: 0.3s;
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --code-font: 'Fira Code', monospace;
+  --btn-padding: 2px 4px;
+  --btn-size: 18px;
+  --topbar-btn-size: 24px;
+  --topbar-btn-padding: 4px;
+  --container-width: 500px;
 }
 
 /* ===== 기본 레이아웃 ===== */
 body {
   font-family: var(--font-family);
   font-size: 14px;
-  width: 500px;
+  width: var(--container-width);
   margin: 0 auto;
   background-color: var(--bg-color);
   color: var(--text-color);
@@ -34,7 +133,7 @@ body {
 .container {
   background-color: var(--container-bg);
   padding: 10px;
-  width: 500px;
+  width: var(--container-width);
   box-sizing: border-box;
   border-radius: 4px;
 }
@@ -265,9 +364,9 @@ textarea {
   line-height: 30px;
   padding: 0 6px;
   font-size: 13px;
-  border: 1px solid var(--primary-color);
+  border: 1px solid var(--border-color);
   border-radius: 3px;
-  background-color: #2c313c;
+  background-color: var(--container-bg);
   color: var(--text-color);
   outline: none;
   cursor: pointer;
@@ -287,7 +386,7 @@ textarea {
 #modelSelect:hover,
 #modelSelect:focus {
   border-color: var(--primary-color);
-  background-color: #323846;
+  background-color: var(--border-color);
 }
 
 /* Right controls */
@@ -346,7 +445,7 @@ textarea {
 }
 
 #promptList li {
-  background-color: #2c313c;
+  background-color: var(--container-bg);
   padding: 6px 8px;
   margin: 2px 0;
   border: 1px solid var(--border-color);
@@ -360,7 +459,7 @@ textarea {
 }
 
 #promptList li:hover {
-  background-color: #323846;
+  background-color: var(--border-color);
   border-color: var(--primary-color);
 }
 
