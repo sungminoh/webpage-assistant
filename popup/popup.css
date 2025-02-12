@@ -229,8 +229,7 @@ body {
 .chat-box-buttons {
   position: absolute;
   bottom: 6px;
-  right: 6px;
-  background-color: var(--container-bg);
+  left: 6px;
   padding: 2px;
   border-radius: 3px;
   opacity: 0;
@@ -242,7 +241,7 @@ body {
 }
 
 .fade-out {
-  animation: fadeOut 0.3s ease forwards;
+  animation: fadeOut var(--fade-duration) ease forwards;
 }
 
 @keyframes fadeOut {
