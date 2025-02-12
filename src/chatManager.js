@@ -4,58 +4,40 @@ import { UIHelper } from "./uiHelper.js";
 
 export class ChatManager {
   /**
-   * @param {HTMLElement} chatBox - 채팅 메시지를 표시할 DOM 요소
+   * @param {HTMLElement} chatBox - The DOM element where chat messages are displayed.
    */
   constructor(chatBox) {
     if (!chatBox) {
       throw new Error("ChatManager requires a valid chatBox element.");
     }
     this.chatBox = chatBox;
+    this.currentAiMessage = null; // To keep track of the ongoing AI response
   }
 
-  /**
-   * 채팅 영역을 스크롤하여 가장 아래로 이동합니다.
-   */
   scrollToBottom() {
     this.chatBox.scrollTop = this.chatBox.scrollHeight;
   }
 
-  /**
-   * 현재 채팅 영역의 스크롤 위치를 chrome.storage.local에 저장합니다.
-   */
   saveScrollPosition() {
     chrome.storage.local.set({ chatScrollPosition: this.chatBox.scrollTop });
   }
 
-  /**
-   * 저장된 채팅 기록과 스크롤 위치를 로드하여 채팅 영역에 표시합니다.
-   */
   async loadChatHistory() {
     const { chatHistory, chatScrollPosition } = await StorageHelper.get(
       ["chatHistory", "chatScrollPosition"]
     );
-
     if (Array.isArray(chatHistory) && chatHistory.length > 0) {
       chatHistory.forEach(({ sender, text, usage }) => {
-        this.addMessage(sender, text, usage);
+        this.addMessage(sender, text, usage, { updateCurrent: false });
       });
       this.chatBox.scrollTop = chatScrollPosition ?? this.chatBox.scrollHeight;
     }
   }
 
-  /**
-   * DOM 내 특정 요소에서 토큰 값을 추출합니다.
-   * @param {HTMLElement} element - 토큰 정보를 포함하는 요소
-   * @param {string} selector - 토큰 정보가 들어있는 자식 요소 선택자
-   * @returns {string} 추출된 토큰 값 (없으면 "0")
-   */
   extractToken(element, selector) {
     return element.querySelector(selector)?.innerText.split(": ")[1] || "0";
   }
 
-  /**
-   * 채팅 영역에 표시된 메시지들을 저장합니다.
-   */
   async saveChatHistory() {
     const messages = Array.from(this.chatBox.children)
       .map((li) => {
@@ -79,34 +61,50 @@ export class ChatManager {
     await StorageHelper.set({ chatHistory: messages });
   }
 
-  /**
-   * "AI is thinking..." 플레이스홀더 메시지를 추가합니다.
-   */
   showPlaceholder() {
+    // Remove any existing placeholder before adding a new one
+    this.removePlaceholder();
     const placeholder = document.createElement("div");
     placeholder.className = "placeholder";
     placeholder.innerText = "AI is thinking...";
     this.chatBox.appendChild(placeholder);
   }
 
-  /**
-   * 플레이스홀더 메시지를 제거합니다.
-   */
   removePlaceholder() {
-    const placeholder = this.chatBox.querySelector(".placeholder");
-    if (placeholder) {
-      placeholder.remove();
+    const existingPlaceholder = this.chatBox.querySelector(".placeholder");
+    if (existingPlaceholder) {
+      existingPlaceholder.remove();
     }
   }
 
   /**
-   * 채팅 메시지를 채팅 영역에 추가합니다.
-   * @param {string} sender - "AI" 또는 "User"
-   * @param {string} text - 메시지 텍스트
-   * @param {object|null} usageInfo - (선택사항) 사용량 정보를 포함한 객체
+   * Adds a new chat message.
+   * @param {string} sender - "AI" or "User"
+   * @param {string} text - The message text.
+   * @param {object|null} usageInfo - Usage info (optional).
+   * @param {object} options - Optional parameters.
+   *        options.updateCurrent: if true, update currentAiMessage instead of creating a new one.
    */
-  addMessage(sender, text, usageInfo = null) {
-    // 채팅 영역이 보이지 않을 경우 visible 클래스를 추가합니다.
+  addMessage(sender, text, usageInfo = null, options = {}) {
+    // If sender is AI and updateCurrent is true and we already have an ongoing AI message,
+    // update that instead of appending a new one.
+    if (sender === "AI" && options.updateCurrent && this.currentAiMessage) {
+      const textEl = this.currentAiMessage.querySelector(".message-text");
+      textEl.textContent = text;
+      if (usageInfo) {
+        const usageHTML = this.createUsageInfo(usageInfo);
+        let usageEl = this.currentAiMessage.querySelector(".usage-info");
+        if (usageEl) {
+          usageEl.innerHTML = usageHTML;
+        } else {
+          textEl.insertAdjacentHTML("afterend", usageHTML);
+        }
+      }
+      this.scrollToBottom();
+      return;
+    }
+
+    // Otherwise, create a new message element.
     if (!this.chatBox.classList.contains("visible")) {
       this.chatBox.classList.add("visible");
     }
@@ -121,7 +119,11 @@ export class ChatManager {
       <div class="button-container"></div>
     `;
 
-    // 복사 버튼 생성 및 추가
+    // If it's an AI message, update currentAiMessage.
+    if (sender === "AI") {
+      this.currentAiMessage = li;
+    }
+
     const copyButton = UIHelper.createCopyButton(text);
     const buttonContainer = li.querySelector(".button-container");
     if (buttonContainer) {
@@ -133,12 +135,11 @@ export class ChatManager {
   }
 
   /**
-   * 사용량 정보를 표시하는 HTML 문자열을 생성합니다.
-   * @param {object} param0 - inputTokens, outputTokens, totalPrice를 포함하는 객체
-   * @returns {string} 사용량 정보를 표시하는 HTML 문자열
+   * Creates HTML for usage info.
+   * @param {object} param0 - An object with inputTokens, outputTokens, totalPrice.
    */
   createUsageInfo({ inputTokens, outputTokens, totalPrice }) {
-    return `
+    return inputTokens == undefined && outputTokens == undefined ? "" : `
       <div class="usage-info">
         <span class="input-tokens">Input Tokens: ${inputTokens}</span> |
         <span class="output-tokens">Output Tokens: ${outputTokens}</span> |
@@ -148,49 +149,53 @@ export class ChatManager {
   }
 
   /**
-   * 백그라운드 API 호출 후 반환된 AI 응답을 채팅 영역에 추가합니다.
-   * @param {object} aiResponse - API 호출 결과 (content, inputTokens, outputTokens)
-   * @param {object} model - 선택된 모델 정보 (inputPrice, outputPrice 등)
-   */
-  addAiResponseMessage(aiResponse, model) {
-    const usageInfo = {
-      inputTokens: aiResponse.inputTokens,
-      outputTokens: aiResponse.outputTokens,
-      totalPrice:
-        ((model.inputPrice * aiResponse.inputTokens) +
-          (model.outputPrice * aiResponse.outputTokens)) /
-        1000
-    };
-    this.addMessage("AI", aiResponse.content, usageInfo);
-  }
-
-
-  /**
-   * 스트림 방식으로 전달된 텍스트 청크를 마지막 AI 메시지에 추가합니다.
-   * 만약 마지막 메시지가 AI 메시지가 아니면 새 AI 메시지를 생성합니다.
-   * @param {string} chunk - AI 응답의 청크(일부분)
+   * Appends text to the last (streamed) AI message.
+   * If no current AI message exists, creates a new one.
+   * @param {string} chunk - A chunk of AI response text.
    */
   appendToLastAiMessage(chunk) {
-    let lastMessage = this.chatBox.lastElementChild;
-    // 마지막 메시지가 없거나 AI 메시지가 아니라면 새 AI 메시지를 생성합니다.
-    if (!lastMessage || !lastMessage.classList.contains("ai-message")) {
-      lastMessage = document.createElement("li");
-      lastMessage.classList.add("ai-message");
-      // 메시지 텍스트와 버튼 컨테이너를 포함하는 기본 구조
-      lastMessage.innerHTML = `
+    if (!this.currentAiMessage || !this.currentAiMessage.classList.contains("ai-message")) {
+      // Create a new AI message element if none exists.
+      this.currentAiMessage = document.createElement("li");
+      this.currentAiMessage.classList.add("ai-message");
+      this.currentAiMessage.innerHTML = `
         <div>
           <span class="message-text"></span>
           <div class="button-container"></div>
         </div>
       `;
-      this.chatBox.appendChild(lastMessage);
+      this.removePlaceholder();
+      this.chatBox.appendChild(this.currentAiMessage);
     }
-    // 마지막 AI 메시지의 텍스트 요소에 청크를 누적합니다.
-    const textEl = lastMessage.querySelector(".message-text");
+    const textEl = this.currentAiMessage.querySelector(".message-text");
     textEl.textContent += chunk;
     this.scrollToBottom();
   }
 
+  /**
+   * When the full AI response is available, finalize the current AI message.
+   * This method updates the current AI message (if it exists) with the full content and usage info.
+   * It also clears the placeholder and resets currentAiMessage.
+   * @param {object} aiResponse - An object with content, inputTokens, outputTokens.
+   * @param {object} model - Model information (for cost calculation).
+   */
+  addAiResponseMessage(aiResponse, model) {
+    const usageInfo = {
+      inputTokens: aiResponse.inputTokens,
+      outputTokens: aiResponse.outputTokens,
+      totalPrice: ((model.inputPrice * aiResponse.inputTokens) + (model.outputPrice * aiResponse.outputTokens)) / 1000
+    };
+
+    // If there is a current AI message from streaming, update it instead of appending a new one.
+    if (this.currentAiMessage && this.currentAiMessage.classList.contains("ai-message")) {
+      this.addMessage("AI", aiResponse.content, usageInfo, { updateCurrent: true });
+    } else {
+      this.addMessage("AI", aiResponse.content, usageInfo);
+    }
+    // Once finalized, clear the placeholder and reset the streaming marker.
+    this.removePlaceholder();
+    this.currentAiMessage = null;
+  }
 }
 
 export const chatManager = new ChatManager(document.getElementById("chat"));
