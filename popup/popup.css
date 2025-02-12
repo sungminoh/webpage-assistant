@@ -31,6 +31,7 @@ body {
 .container {
   background-color: var(--container-bg);
   padding: 10px;
+  width: 500px;
   box-sizing: border-box;
   border-radius: 4px;
 }
