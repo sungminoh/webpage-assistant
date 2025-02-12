@@ -154,10 +154,10 @@ export class ChatManager {
    * @param {string} chunk - A chunk of AI response text.
    */
   appendToLastAiMessage(chunk) {
-    if (!this.currentAiMessage || !this.currentAiMessage.classList.contains("ai-message")) {
+    if (!this.currentAiMessage || !this.currentAiMessage.classList.contains("streaming-message")) {
       // Create a new AI message element if none exists.
       this.currentAiMessage = document.createElement("li");
-      this.currentAiMessage.classList.add("ai-message");
+      this.currentAiMessage.classList.add("ai-message", "streaming-message");
       this.currentAiMessage.innerHTML = `
         <div>
           <span class="message-text"></span>
@@ -192,6 +192,8 @@ export class ChatManager {
     }
 
     // If there is a current AI message from streaming, update it instead of appending a new one.
+    if (this.currentAiMessage && this.currentAiMessage.classList.contains("streaming-message")) {
+      this.currentAiMessage.classList.remove("streaming-message");
       this.addMessage("AI", content, usageInfo, { updateCurrent: true });
     } else {
       this.addMessage("AI", content, usageInfo);
