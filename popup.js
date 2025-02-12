@@ -212,10 +212,75 @@ class ContentProcessor {
     ChatManager.showPlaceholder();
 
     const { selectedHTML } = await StorageHelper.get("selectedHTML");
+
+    function processPageContent(prompt, model, selectedHtml) {
+      function cleanDom(dom) {
+        const cleaned = dom.cloneNode(true);
+
+        cleaned.querySelectorAll([
+          "script", "style", "noscript", "meta", "link",
+          "aside", ".ads", ".footer", ".header", ".sidebar"
+        ]).forEach(el => el.remove());
+
+        cleaned.querySelectorAll("*").forEach(el => {
+          const allowedAttrs = { a: ["href"], img: ["src", "alt"], iframe: ["src"] };
+          const allowed = allowedAttrs[el.tagName.toLowerCase()] || [];
+          [...el.attributes].forEach(attr => {
+            if (!allowed.includes(attr.name)) el.removeAttribute(attr.name);
+          });
+        });
+
+        return cleaned;
+      }
+
+      function compressDOM(element) {
+        if (!element) return null;
+        function compress(node) {
+          while (node.nodeType === Node.ELEMENT_NODE &&
+            node.childNodes.length === 1 &&
+            node.firstChild.nodeType === Node.ELEMENT_NODE) {
+            node = node.firstChild;
+          }
+          [...node.childNodes].forEach((child) => {
+            const compressedChild = compress(child);
+            if (compressedChild !== child) node.replaceChild(compressedChild, child);
+          });
+          return node;
+        }
+        return compress(element);
+      }
+
+      function elementToJson(element) {
+        if (element.nodeType === Node.COMMENT_NODE) return null;
+        if (element.nodeType === Node.TEXT_NODE) return element.textContent.trim() || null;
+        const tag = element.tagName?.toLowerCase();
+        const children = [...element.childNodes]
+          .map(elementToJson)
+          .filter(child => child !== null);
+        return { [tag]: [element.textContent.trim() || "", ...children] };
+      }
+
+      const targetDom = selectedHtml
+        ? document.createRange().createContextualFragment(selectedHtml).firstElementChild
+        : document.body;
+      const cleanedDom = cleanDom(targetDom);
+      const compressedDom = compressDOM(cleanedDom);
+      const content = JSON.stringify(elementToJson(compressedDom));
+
+      chrome.runtime.sendMessage({ action: "summarize", content, model, prompt });
+    }
+
     if (selectedHTML) {
-      this.processPageContent(prompt, selectedModel, selectedHTML);
+      processPageContent(prompt, selectedModel, selectedHTML);
     } else {
-      this.executeScriptOnActiveTab(prompt, selectedModel);
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tabs.length === 0) return;
+
+      chrome.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        function: processPageContent,
+        args: [prompt, selectedModel]
+      });
     }
   }
   static async validateApiKey(model) {
@@ -233,107 +298,6 @@ class ContentProcessor {
       return false;
     }
     return true;
-  }
-  static processPageContent(prompt, model, selectedHtml) {
-    const targetDom = selectedHtml
-      ? document.createRange().createContextualFragment(selectedHtml).firstElementChild
-      : document.body;
-
-    const cleanedDom = this.cleanDom(targetDom);
-    const compressedDom = this.compressDOM(cleanedDom);
-    const content = JSON.stringify(this.elementToJson(compressedDom));
-
-    chrome.runtime.sendMessage({ action: "summarize", content, model, prompt });
-  }
-
-  static async executeScriptOnActiveTab(prompt, model) {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tabs.length === 0) return;
-
-    chrome.scripting.executeScript({
-      target: { tabId: tabs[0].id },
-      function: ContentProcessor.processPageContent,
-      args: [prompt, model]
-    });
-  }
-
-  static cleanDom(dom) {
-    const cleaned = dom.cloneNode(true);
-    // Remove unnecessary elements
-    cleaned.querySelectorAll([
-      "script",
-      "style",
-      // "iframe", 
-      "noscript",
-      // "img", 
-      "meta",
-      "link",
-      // "button", 
-      // "input", 
-      // "form", 
-      "aside",
-      ".ads",
-      ".footer",
-      ".header",
-      ".sidebar"
-    ]).forEach(el => el.remove());
-
-    // Remove unnecessary attributes
-    cleaned.querySelectorAll("*").forEach(el => {
-      const allowedAttrs = { a: ["href"], img: ["src", "alt"], iframe: ["src"] };
-      const allowed = allowedAttrs[el.tagName.toLowerCase()] || [];
-      [...el.attributes].forEach(attr => {
-        if (!allowed.includes(attr.name)) el.removeAttribute(attr.name);
-      });
-    });
-
-    return this.removeEmptyTags(cleaned);
-  }
-
-  static removeEmptyTags(dom) {
-    function removeEmpty(el) {
-      [...el.children].forEach(child => {
-        removeEmpty(child);
-        if (!child.textContent.trim() && !child.children.length) child.remove();
-      });
-    }
-    const clonedDom = dom.cloneNode(true);
-    removeEmpty(clonedDom);
-    return clonedDom;
-  }
-
-
-  static compressDOM(element) {
-    if (!element) return null;
-
-    function compress(node) {
-      while (node.nodeType === Node.ELEMENT_NODE &&
-        node.childNodes.length === 1 &&
-        node.firstChild.nodeType === Node.ELEMENT_NODE) {
-        node = node.firstChild;
-      }
-
-      [...node.childNodes].forEach((child, index) => {
-        const compressedChild = compress(child);
-        if (compressedChild !== child) node.replaceChild(compressedChild, child);
-      });
-
-      return node;
-    }
-
-    return compress(element);
-  }
-
-  static elementToJson(element) {
-    if (element.nodeType === Node.COMMENT_NODE) return null;
-    if (element.nodeType === Node.TEXT_NODE) return element.textContent.trim() || null;
-
-    const tag = element.tagName?.toLowerCase();
-    const children = [...element.childNodes]
-      .map(this.elementToJson.bind(this))
-      .filter(child => child !== null);
-
-    return { [tag]: [element.textContent.trim() || "", ...children] };
   }
 }
 
