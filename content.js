@@ -4,10 +4,10 @@ class DomSelector {
         this.selectedElement = null;
         this.currentElement = null;
         this.createOverlay();
-        this.createESCMenu();
+        this.createEscMenu();
         // this.createPreviewBox();
 
-        document.addEventListener("keydown", this.handleKeydown.bind(this));
+        this.attachEventListeners();
     }
 
     reset() {
@@ -75,7 +75,7 @@ class DomSelector {
                 y: event.clientY + window.scrollY
             };
             chrome.runtime.sendMessage({ action: "click_target_dom", html: event.target.outerHTML });
-                   // Request popup to open
+            // Request popup to open
             chrome.runtime.sendMessage({ action: "open_popup" });
 
             // Show selected element preview
@@ -100,35 +100,41 @@ class DomSelector {
         }
     }
 
+    /** Creates overlay to darken the background */
     createOverlay() {
         this.overlay = document.createElement("div");
-        this.overlay.style.position = "fixed";
-        this.overlay.style.top = "0";
-        this.overlay.style.left = "0";
-        this.overlay.style.width = "100%";
-        this.overlay.style.height = "100%";
-        this.overlay.style.background = "rgba(0, 0, 0, 0.6)";
-        this.overlay.style.zIndex = "9998";
-        this.overlay.style.display = "none";
-        this.overlay.style.pointerEvents = "none"; // Prevent interaction
+        Object.assign(this.overlay.style, {
+            position: "fixed",
+            top: "0",
+            left: "0",
+            width: "100%",
+            height: "100%",
+            background: "rgba(0, 0, 0, 0.6)",
+            zIndex: "9998",
+            display: "none",
+            pointerEvents: "none",
+        });
         document.body.appendChild(this.overlay);
     }
 
-    createESCMenu() {
+    /** Creates ESC menu to guide users */
+    createEscMenu() {
         this.escMenu = document.createElement("div");
         this.escMenu.innerHTML = "🔍 Selection Mode Active – Press <b>ESC</b> to exit.";
-        this.escMenu.style.position = "fixed";
-        this.escMenu.style.top = "10px";
-        this.escMenu.style.left = "50%";
-        this.escMenu.style.transform = "translateX(-50%)";
-        this.escMenu.style.padding = "10px 20px";
-        this.escMenu.style.background = "#222";
-        this.escMenu.style.color = "#fff";
-        this.escMenu.style.borderRadius = "8px";
-        this.escMenu.style.fontSize = "14px";
-        this.escMenu.style.zIndex = "9999";
-        this.escMenu.style.display = "none";
-        this.escMenu.style.boxShadow = "0px 4px 8px rgba(0, 0, 0, 0.3)";
+        Object.assign(this.escMenu.style, {
+            position: "fixed",
+            top: "10px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            padding: "10px 20px",
+            background: "#222",
+            color: "#fff",
+            borderRadius: "8px",
+            fontSize: "14px",
+            zIndex: "9999",
+            display: "none",
+            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.3)",
+        });
         document.body.appendChild(this.escMenu);
     }
 
@@ -159,14 +165,14 @@ class DomSelector {
     //     document.getElementById("preview-content").textContent = element.outerHTML;
     //     this.previewBox.style.display = "block"; // Show preview
     // }
+    /** Attaches event listeners */
+    attachEventListeners() {
+        chrome.runtime.onMessage.addListener(this.handleToggleMessage.bind(this));
+        document.addEventListener("mouseover", this.handleMouseOver.bind(this));
+        document.addEventListener("click", this.handleClick.bind(this));
+        document.addEventListener("keydown", this.handleKeydown.bind(this));
+    }
 }
 
 // Initialize DomSelector
 const domSelector = new DomSelector();
-
-// Event listeners
-chrome.runtime.onMessage.addListener(domSelector.handleToggleMessage.bind(domSelector));
-document.addEventListener("mouseover", domSelector.handleMouseOver.bind(domSelector));
-document.addEventListener("click", domSelector.handleClick.bind(domSelector));
-document.addEventListener("keydown", domSelector.handleKeydown.bind(domSelector));
-
