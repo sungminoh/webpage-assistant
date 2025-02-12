@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <title>Floating Window</title>
+</head>
+<body>
+  <h2>Persistent Popup</h2>
+  <p>This popup will not close when you click outside.</p>
+  <button id="close-btn">Close</button>
+
+  <script>
+    document.getElementById("close-btn").addEventListener("click", () => {
+      window.close();
+    });
+  </script>
+</body>
+</html>

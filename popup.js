@@ -6,7 +6,8 @@ const DOMElements = {
   savePromptBtn: null,
   submitPromptBtn: null,
   promptList: null,
-  clearChatBtn: null
+  clearChatBtn: null,
+  activateSelectionBtn: null
 };
 
 // Chat functionality
@@ -412,6 +413,7 @@ const UIHelper = {
   }
 };
 
+
 class Model {
   constructor(type, name, inputPrice = null, outputPrice = null) {
     this.type = type; // 'openai' or 'ollama'
@@ -522,6 +524,46 @@ class ModelManager {
   }
 }
 
+
+class DomSelectManager {
+  constructor() {
+    this.active = false;
+    this.unloadHandler = this.deactivateOnUnload.bind(this);
+  }
+
+  toggle() {
+    this.active = !this.active;
+    DOMElements.activateSelectionBtn.innerHTML = this.active ? `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368"><path d="m500-120-56-56 142-142-142-142 56-56 142 142 142-142 56 56-142 142 142 142-56 56-142-142-142 142Zm-220 0v-80h80v80h-80Zm-80-640h-80q0-33 23.5-56.5T200-840v80Zm80 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80q33 0 56.5 23.5T840-760h-80ZM200-200v80q-33 0-56.5-23.5T120-200h80Zm-80-80v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm640 0v-80h80v80h-80Z"/></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368"><path d="M440-120v-400h400v80H576l264 264-56 56-264-264v264h-80Zm-160 0v-80h80v80h-80Zm-80-640h-80q0-33 23.5-56.5T200-840v80Zm80 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80q33 0 56.5 23.5T840-760h-80ZM200-200v80q-33 0-56.5-23.5T120-200h80Zm-80-80v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm640 0v-80h80v80h-80Z"/></svg>`;
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs.length === 0) return;
+      chrome.tabs.sendMessage(tabs[0].id, { action: "toggleDomSelector", active: this.active });
+    });
+    window.addEventListener('beforeunload', this.unloadHandler);
+  }
+
+  deactivateOnUnload() {
+    this.active = false;
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs.length === 0) return;
+      chrome.tabs.sendMessage(tabs[0].id, { action: "toggleDomSelector", active: this.active });
+    });
+  }
+
+  deactivateOnEscape() {
+    if (this.active) {
+      this.active = false;
+      DOMElements.activateSelectionBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368"><path d="M440-120v-400h400v80H576l264 264-56 56-264-264v264h-80Zm-160 0v-80h80v80h-80Zm-80-640h-80q0-33 23.5-56.5T200-840v80Zm80 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80q33 0 56.5 23.5T840-760h-80ZM200-200v80q-33 0-56.5-23.5T120-200h80Zm-80-80v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm640 0v-80h80v80h-80Z"/></svg>`;
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs.length === 0) return;
+        chrome.tabs.sendMessage(tabs[0].id, { action: "toggleDomSelector", active: this.active });
+      });
+      window.addEventListener('beforeunload', this.unloadHandler);
+    }
+  }
+}
+
+
+
 // Initialize application
 document.addEventListener("DOMContentLoaded", async () => {
   // Initialize DOM elements
@@ -532,6 +574,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   DOMElements.submitPromptBtn = document.getElementById("submitPromptBtn");
   DOMElements.promptList = document.getElementById("promptList");
   DOMElements.clearChatBtn = document.getElementById("clearChatBtn");
+  DOMElements.activateSelectionBtn = document.getElementById("activateSelectionBtn");
 
   // Load saved data
   chrome.storage.sync.get(["savedPrompts", "selectedModel"], (data) => {
@@ -561,6 +604,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
   });
+
+  const domSelectManager = new DomSelectManager();
+  DOMElements.activateSelectionBtn.addEventListener("click", domSelectManager.toggle.bind(domSelectManager));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      domSelectManager.deactivateOnEscape();
+    }
+  });
+  window.addEventListener('beforeunload', domSelectManager.unloadHandler);
 
   DOMElements.savePromptBtn.addEventListener("click", () => {
     const prompt = DOMElements.customPromptInput.value.trim();
@@ -608,4 +660,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Load initial chat history
   ChatManager.loadChatHistory();
+
+  chrome.storage.local.get("selectedHTML", function (data) {
+    document.getElementById("html-content").innerText = data.selectedHTML || "Click an element to see its HTML here.";
+  });
+});
+document.addEventListener("mousedown", (event) => {
+  event.stopPropagation(); // 팝업이 닫히지 않도록 이벤트 전파 차단
 });
