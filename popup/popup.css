@@ -1,6 +1,5 @@
-/* popup.css */
-
-/* ===== Color Palette & Font Variables (Dark Coding Theme) ===== */
+/* ===== Global Variables ===== */
+/* You can merge these with your theme-specific variables */
 :root {
   --bg-color: #282c34;
   --container-bg: #21252b;
@@ -16,6 +15,10 @@
   /* Variables for top-bar controls */
   --topbar-btn-size: 24px;
   --topbar-btn-padding: 4px;
+  /* New variables for code backgrounds and other elements */
+  --code-bg: #2c313c;
+  --placeholder-bg: #3e4451;
+  --ai-bg: #6b707a;
 }
 
 /* ===== 기본 레이아웃 ===== */
@@ -63,14 +66,14 @@ body {
 }
 
 .html-container code {
-  background-color: #2c313c;
+  background-color: var(--code-bg);
   padding: 2px 4px;
   border-radius: 3px;
   font-family: var(--code-font);
 }
 
 .html-container pre {
-  background-color: #2c313c;
+  background-color: var(--code-bg);
   padding: 8px;
   border-radius: 4px;
   overflow-x: auto;
@@ -140,6 +143,53 @@ body {
   position: relative;
 }
 
+/* Button container inside each chat message */
+.chat-box li .button-container {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  opacity: 0;
+  transition: opacity var(--fade-duration) ease;
+}
+
+.chat-box li:hover .button-container {
+  opacity: 1;
+}
+
+/* Additional markdown styling within chat messages */
+.chat-box li .message-text h1,
+.chat-box li .message-text h2,
+.chat-box li .message-text h3 {
+  color: var(--primary-color);
+  margin: 0.5em 0;
+}
+
+.chat-box li .message-text code {
+  background-color: var(--code-bg);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: var(--code-font);
+}
+
+.chat-box li .message-text pre {
+  background-color: var(--code-bg);
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: var(--code-font);
+}
+
+.chat-box li .message-text blockquote {
+  border-left: 4px solid var(--primary-color);
+  padding-left: 10px;
+  color: var(--secondary-text-color);
+  margin: 0.5em 0;
+  font-style: italic;
+}
+
 .user-message {
   background-color: var(--primary-color);
   color: #fff;
@@ -148,7 +198,7 @@ body {
 }
 
 .ai-message {
-  background-color: #3e4451;
+  background-color: var(--ai-bg);
   color: var(--text-color);
   margin-right: auto;
   max-width: 70%;
@@ -161,7 +211,7 @@ body {
 
 .placeholder {
   font-style: italic;
-  background-color: #3e4451;
+  background-color: var(--placeholder-bg);
   color: var(--secondary-text-color);
   padding: 6px 8px;
   border-radius: 4px;
@@ -173,19 +223,6 @@ body {
   0% { opacity: 0.6; }
   50% { opacity: 1; }
   100% { opacity: 0.6; }
-}
-
-/* Copy and delete buttons: positioned at bottom-right of each message */
-.chat-box li .button-container {
-  position: absolute;
-  bottom: 4px;
-  right: 4px;
-  opacity: 0;
-  transition: opacity var(--fade-duration) ease;
-}
-
-.chat-box li:hover .button-container {
-  opacity: 1;
 }
 
 /* ===== 입력 영역 ===== */

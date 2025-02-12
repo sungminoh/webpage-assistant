@@ -1,6 +1,7 @@
 // src/chatManager.js
 import { StorageHelper } from "./storageHelper.js";
 import { UIHelper } from "./uiHelper.js";
+import { marked } from "../libs/marked.min.js";
 
 export class ChatManager {
   /**
@@ -80,7 +81,7 @@ export class ChatManager {
   /**
    * Adds a new chat message.
    * @param {string} sender - "AI" or "User"
-   * @param {string} text - The message text.
+   * @param {string} text - The message text in Markdown.
    * @param {object|null} usageInfo - Usage info (optional).
    * @param {object} options - Optional parameters.
    *        options.updateCurrent: if true, update currentAiMessage instead of creating a new one.
@@ -90,7 +91,8 @@ export class ChatManager {
     // update that instead of appending a new one.
     if (sender === "AI" && options.updateCurrent && this.currentAiMessage) {
       const textEl = this.currentAiMessage.querySelector(".message-text");
-      textEl.textContent = text;
+      // Re-render markdown for updated text
+      textEl.innerHTML = marked.parse(text);
       if (usageInfo) {
         const usageHTML = this.createUsageInfo(usageInfo);
         let usageEl = this.currentAiMessage.querySelector(".usage-info");
@@ -111,9 +113,13 @@ export class ChatManager {
 
     const li = document.createElement("li");
     li.classList.add(sender === "AI" ? "ai-message" : "user-message");
+
+    // Render the message text as Markdown
+    const renderedText = marked.parse(text);
+
     li.innerHTML = `
       <div>
-        <span class="message-text">${text}</span>
+        <span class="message-text">${renderedText}</span>
         ${usageInfo ? this.createUsageInfo(usageInfo) : ""}
       </div>
       <div class="button-container"></div>
@@ -124,9 +130,18 @@ export class ChatManager {
       this.currentAiMessage = li;
     }
 
-    const copyButton = UIHelper.createCopyButton(text);
     const buttonContainer = li.querySelector(".button-container");
     if (buttonContainer) {
+      // Create a delete button
+      const deleteButton = UIHelper.createDeleteButton();
+      deleteButton.addEventListener('click', () => {
+        li.remove();
+        this.saveChatHistory();
+      });
+      // Create a copy button
+      const copyButton = UIHelper.createCopyButton(text);
+      // Append buttons horizontally
+      buttonContainer.appendChild(deleteButton);
       buttonContainer.appendChild(copyButton);
     }
 
@@ -151,7 +166,7 @@ export class ChatManager {
   /**
    * Appends text to the last (streamed) AI message.
    * If no current AI message exists, creates a new one.
-   * @param {string} chunk - A chunk of AI response text.
+   * @param {string} chunk - A chunk of AI response text in Markdown.
    */
   appendToLastAiMessage(chunk) {
     if (!this.currentAiMessage || !this.currentAiMessage.classList.contains("streaming-message")) {
@@ -168,7 +183,11 @@ export class ChatManager {
       this.chatBox.appendChild(this.currentAiMessage);
     }
     const textEl = this.currentAiMessage.querySelector(".message-text");
-    textEl.textContent += chunk;
+    // Accumulate raw text in a data attribute for re-rendering
+    const currentRaw = textEl.getAttribute('data-raw') || "";
+    const newRaw = currentRaw + chunk;
+    textEl.setAttribute('data-raw', newRaw);
+    textEl.innerHTML = marked.parse(newRaw);
     this.scrollToBottom();
   }
 
@@ -183,22 +202,19 @@ export class ChatManager {
     let usageInfo;
     let content;
     if (typeof aiResponse !== 'string') {
-      content = aiResponse.content
-      // Calculate the total price based on the model's input and output prices and the number of tokens used.
-      // Only calculate usageInfo if inputTokens and outputTokens are not null.
+      content = aiResponse.content;
       usageInfo = (aiResponse.inputTokens ?? null) !== null && (aiResponse.outputTokens ?? null) !== null
         ? ((model.inputPrice * aiResponse.inputTokens) + (model.outputPrice * aiResponse.outputTokens)) / 1000
         : null;
     }
 
-    // If there is a current AI message from streaming, update it instead of appending a new one.
+    // If there is a current AI message from streaming, update it.
     if (this.currentAiMessage && this.currentAiMessage.classList.contains("streaming-message")) {
       this.currentAiMessage.classList.remove("streaming-message");
       this.addMessage("AI", content, usageInfo, { updateCurrent: true });
     } else {
       this.addMessage("AI", content, usageInfo);
     }
-    // Once finalized, clear the placeholder and reset the streaming marker.
     this.removePlaceholder();
     this.currentAiMessage = null;
   }
