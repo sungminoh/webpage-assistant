@@ -16,9 +16,9 @@ class PromptManager {
       
       const dragHandle = UIHelper.createDragHandle();
       const promptText = UIHelper.createPromptText(prompt);
-      const deleteBtn = UIHelper.createDeleteButton(async () => await this.deletePrompt(index));
+      const removeBtn = UIHelper.createRemoveButton(async () => await this.removePrompt(index));
 
-      li.append(dragHandle, promptText, deleteBtn);
+      li.append(dragHandle, promptText, removeBtn);
       promptList.appendChild(li);
     });
 
@@ -31,8 +31,8 @@ class PromptManager {
     if (!promptList) return;
     promptList.querySelectorAll("li").forEach((li, index) => {
       li.addEventListener("click", (event) => {
-        // Prevent prompt submission when delete button is clicked
-        if (event.target.closest(".delete-btn")) return;
+        // Prevent prompt submission when remove button is clicked
+        if (event.target.closest(".remove-btn")) return;
         const customPromptInput = document.getElementById("customPrompt");
         if (customPromptInput) customPromptInput.value = prompts[index];
         // Submit the prompt when clicked
@@ -69,7 +69,7 @@ class PromptManager {
     this.renderList(savedPrompts);
   }
 
-  static async deletePrompt(index) {
+  static async removePrompt(index) {
     const promptItems = document.querySelectorAll("#promptList li");
     if (promptItems[index]) {
       promptItems[index].classList.add("fade-out");
