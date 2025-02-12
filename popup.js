@@ -595,8 +595,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const domSelectManager = new DomSelectManager();
   chrome.storage.local.get("selectedHTML", function (data) {
-    if (data.selectedHTML) {
-      domSelectManager.setActive(true)
+    if (data.selectedHTML || data.selectedHTML.trim()) {
+      domSelectManager.setActive(true);
     }
   });
   DOMElements.activateSelectionBtn.addEventListener("click", domSelectManager.toggle.bind(domSelectManager));
