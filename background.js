@@ -228,7 +228,10 @@ chrome.runtime.onInstalled.addListener(() => {
 // Additional message handling: store selected HTML and open popup.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "click_target_dom") {
-    chrome.storage.local.set({ selectedHTML: message.html });
+    chrome.storage.local.set({
+      selectedHTML: message.html,
+      selectedCSS: message.css,
+    });
   }
   if (message.action === "open_popup") {
     chrome.action.openPopup();

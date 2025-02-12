@@ -1,4 +1,15 @@
 // content/content.js
+
+function getCssText(element) {
+  const computedStyle = window.getComputedStyle(element);
+  let cssText = "";
+  for (let i = 0; i < computedStyle.length; i++) {
+    const prop = computedStyle[i];
+    cssText += `${prop}: ${computedStyle.getPropertyValue(prop)}; `;
+  }
+  return cssText;
+}
+
 class DomSelector {
   constructor() {
     this.selectionActive = false;
@@ -63,7 +74,11 @@ class DomSelector {
       }
       this.selectedElement = event.target;
       this.markSelectedBoundary(this.selectedElement);
-      chrome.runtime.sendMessage({ action: "click_target_dom", html: event.target.outerHTML });
+      chrome.runtime.sendMessage({
+        action: "click_target_dom",
+        html: event.target.outerHTML,
+        css: getCssText(event.target),
+      });
       chrome.runtime.sendMessage({ action: "open_popup" });
     }
   }

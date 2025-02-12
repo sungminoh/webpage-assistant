@@ -144,11 +144,17 @@ function handleIncomingMessages(message) {
  * DOM 선택 기능 초기화 (DomSelectManager)
  */
 function initializeDomSelector() {
+  console.debug("initializeDomSelector")
   domSelectManager = new DomSelectManager();
-  StorageHelper.get("selectedHTML", "local").then(({ selectedHTML }) => {
+  StorageHelper.get(["selectedHTML", "selectedCSS"], "local").then(({ selectedHTML, selectedCSS }) => {
     if (selectedHTML?.trim()) {
       domSelectManager.setActive(true);
-      document.getElementById("html-content").innerHTML = selectedHTML;
+      const element = document.getElementById("html-content");
+      console.log(element)
+      element.innerHTML = selectedHTML;
+      if (selectedCSS?.trim()) {
+        element.style.cssText = selectedCSS;
+      }
     }
   });
   DOMElements.activateSelectionBtn.addEventListener("click", domSelectManager.toggle.bind(domSelectManager));
