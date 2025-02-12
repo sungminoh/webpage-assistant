@@ -1,29 +1,24 @@
 /* popup.css */
 
-/* ===== 기본 테마 변수 (라이트 모드) ===== */
+/* ===== Color Palette & Font Variables (Dark Coding Theme) ===== */
 :root {
-  --bg-color: #f4f4f4;
-  --container-bg: #ffffff;
-  --primary-color: #007bff;
-  --text-color: #333333;
-  --border-color: #cccccc;
-  --secondary-text-color: #555555;
-  --fade-duration: 0.5s;
-}
-
-/* ===== 다크 모드 테마 변수 ===== */
-[data-theme="dark"] {
-  --bg-color: #222222;
-  --container-bg: #333333;
-  --primary-color: #0d6efd;
-  --text-color: #ffffff;
-  --border-color: #444444;
-  --secondary-text-color: #bbbbbb;
+  --bg-color: #282c34;
+  --container-bg: #21252b;
+  --primary-color: #61afef;
+  --text-color: #abb2bf;
+  --border-color: #3e4451;
+  --secondary-text-color: #5c6370;
+  --fade-duration: 0.3s;
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --code-font: 'Fira Code', monospace;
+  --btn-padding: 2px 4px;
+  --btn-size: 18px;
 }
 
 /* ===== 기본 레이아웃 ===== */
 body {
-  font-family: Arial, sans-serif;
+  font-family: var(--font-family);
+  font-size: 14px;
   width: 500px;
   margin: 0 auto;
   background-color: var(--bg-color);
@@ -34,16 +29,56 @@ body {
   background-color: var(--container-bg);
   padding: 10px;
   box-sizing: border-box;
+  border-radius: 4px;
 }
 
-/* HTML Preview Area */
+/* ===== HTML Preview Area (Markdown Rendering) ===== */
 .html-container {
-  max-height: 180px;
-  overflow-y: auto;
+  font-family: var(--code-font);
+  background-color: var(--container-bg);
+  color: var(--text-color);
+  padding: 12px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   margin-bottom: 10px;
-  padding: 6px;
+  overflow-y: auto;
+  max-height: 220px;
+}
+
+.html-container h1,
+.html-container h2,
+.html-container h3 {
+  color: var(--primary-color);
+  margin-top: 1em;
+  margin-bottom: 0.4em;
+}
+
+.html-container p {
+  line-height: 1.4;
+  margin-bottom: 1em;
+}
+
+.html-container code {
+  background-color: #2c313c;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: var(--code-font);
+}
+
+.html-container pre {
+  background-color: #2c313c;
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: var(--code-font);
+}
+
+.html-container blockquote {
+  border-left: 4px solid var(--primary-color);
+  padding-left: 10px;
+  color: var(--secondary-text-color);
+  margin: 1em 0;
+  font-style: italic;
 }
 
 /* ===== 채팅 영역 ===== */
@@ -56,8 +91,8 @@ body {
   max-height: 400px;
   overflow-y: auto;
   border: 1px solid var(--border-color);
-  border-radius: 8px 8px 0 0;
-  padding: 10px;
+  border-radius: 4px 4px 0 0;
+  padding: 8px;
   background-color: var(--container-bg);
   display: none;
 }
@@ -66,16 +101,16 @@ body {
   display: block;
 }
 
-/* Chat box buttons positioned in the bottom–right with a light background */
+/* Chat control buttons (tighter & smaller) */
 .chat-box-buttons {
   position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 4px;
-  border-radius: 4px;
+  bottom: 6px;
+  right: 6px;
+  background-color: rgba(40, 44, 52, 0.8);
+  padding: 2px;
+  border-radius: 3px;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--fade-duration) ease;
 }
 
 .chat-container:hover .chat-box-buttons {
@@ -83,7 +118,7 @@ body {
 }
 
 .fade-out {
-  animation: fadeOut 0.5s ease forwards;
+  animation: fadeOut 0.3s ease forwards;
 }
 
 @keyframes fadeOut {
@@ -93,14 +128,12 @@ body {
 
 .chat-box li {
   list-style: none;
-  margin-bottom: 15px;
-  padding: 8px;
-  border-radius: 8px;
-  position: relative;
+  margin-bottom: 8px;
+  padding: 6px;
+  border-radius: 4px;
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-/* 사용자 메시지 */
 .user-message {
   background-color: var(--primary-color);
   color: #fff;
@@ -108,28 +141,25 @@ body {
   max-width: 70%;
 }
 
-/* AI 메시지 */
 .ai-message {
-  background-color: #e0e0e0;
+  background-color: #3e4451;
   color: var(--text-color);
   margin-right: auto;
   max-width: 70%;
 }
 
-/* 메시지 텍스트 */
 .message-text {
   word-wrap: break-word;
   white-space: pre-wrap;
 }
 
-/* 플레이스홀더 (예: "AI is thinking...") */
 .placeholder {
   font-style: italic;
-  background-color: #e0e0e0;
+  background-color: #3e4451;
   color: var(--secondary-text-color);
-  padding: 8px 12px;
-  border-radius: 12px;
-  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
   animation: pulse 1.5s infinite ease-in-out;
 }
 
@@ -142,17 +172,17 @@ body {
 /* ===== 입력 영역 ===== */
 .input-container {
   border: 1px solid var(--border-color);
-  border-radius: 0 0 5px 5px;
+  border-radius: 0 0 4px 4px;
   padding: 6px;
   background-color: var(--container-bg);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   box-sizing: border-box;
 }
 
 textarea {
   width: 100%;
-  height: 40px;
-  padding: 8px;
+  height: 36px;
+  padding: 6px;
   border: none;
   font-size: 14px;
   resize: none;
@@ -167,34 +197,32 @@ textarea {
   justify-content: space-between;
   margin-bottom: 6px;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 6px;
+  padding-bottom: 4px;
 }
 
-/* Left controls: activate button + model selector */
 .left-controls {
   display: flex;
   align-items: center;
   flex: 1;
 }
 
-/* Right controls: settings button stays at far right */
 .right-controls {
   display: flex;
   align-items: center;
 }
 
-/* Model selector takes up available space */
+/* Model selector takes up remaining space */
 #modelSelect {
   flex: 1;
-  margin: 0 10px;
+  margin: 0 6px;
   box-sizing: border-box;
-  height: 32px;
-  line-height: 32px;
-  padding: 0 10px;
-  font-size: 14px;
+  height: 30px;
+  line-height: 30px;
+  padding: 0 6px;
+  font-size: 13px;
   border: 1px solid var(--primary-color);
-  border-radius: 5px;
-  background-color: #f9f9f9;
+  border-radius: 3px;
+  background-color: #2c313c;
   color: var(--text-color);
   outline: none;
   cursor: pointer;
@@ -202,40 +230,34 @@ textarea {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="%235f6368" d="M7 10l5 5 5-5z"/></svg>');
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"><path fill="%23abb2bf" d="M7 10l5 5 5-5z"/></svg>');
   background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 14px;
+  background-position: right 6px center;
+  background-size: 10px;
 }
 
 #modelSelect:hover,
 #modelSelect:focus {
-  border-color: #0056b3;
-  background-color: #eef;
+  border-color: var(--primary-color);
+  background-color: #323846;
 }
 
 /* ===== 버튼 그룹 ===== */
 .button-group {
   display: flex;
-  gap: 8px;
+  gap: 4px;
 }
 
-/* Prompt buttons aligned to the right */
-.prompt-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-/* Icon button styling */
 .icon-btn {
   background: none;
   border: none;
   cursor: pointer;
+  padding: var(--btn-padding);
+  width: var(--btn-size);
+  height: var(--btn-size);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
   transition: transform 0.2s ease;
 }
 
@@ -247,19 +269,27 @@ textarea {
   transform: scale(0.95);
 }
 
+/* ===== Prompt Buttons (Right-aligned) ===== */
+.prompt-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 4px;
+}
+
 /* ===== 프롬프트 목록 ===== */
 #promptList {
   list-style: none;
   padding: 0;
-  margin: 8px 0;
+  margin: 6px 0;
 }
 
 #promptList li {
-  background-color: #f5f5f5;
+  background-color: #2c313c;
   padding: 6px 8px;
   margin: 2px 0;
   border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -269,11 +299,10 @@ textarea {
 }
 
 #promptList li:hover {
-  background-color: #eef;
+  background-color: #323846;
   border-color: var(--primary-color);
 }
 
-/* 드래그 핸들 및 삭제 버튼 */
 .drag-handle,
 .delete-btn {
   cursor: grab;
@@ -282,11 +311,11 @@ textarea {
 
 .drag-handle svg,
 .delete-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
-/* ===== 반응형 디자인 ===== */
+/* ===== Responsive Adjustments ===== */
 @media (max-width: 300px) {
   body {
     width: 100%;
@@ -294,8 +323,7 @@ textarea {
   .container {
     padding: 5px;
   }
-  /* Ensure model selector remains inline within the top bar */
   #modelSelect {
-    margin: 0 5px;
+    margin: 0 4px;
   }
 }
