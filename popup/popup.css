@@ -25,7 +25,7 @@
 body {
   font-family: Arial, sans-serif;
   width: 500px;
-  margin: 0;
+  margin: 0 auto;
   background-color: var(--bg-color);
   color: var(--text-color);
 }
@@ -48,7 +48,7 @@ body {
 
 /* ===== 채팅 영역 ===== */
 .chat-container {
-  position: relative; /* for positioning the chat-box buttons */
+  position: relative;
   margin-bottom: 10px;
 }
 
@@ -66,7 +66,7 @@ body {
   display: block;
 }
 
-/* Chat box buttons: bottom–right, light background, hidden until hover */
+/* Chat box buttons positioned in the bottom–right with a light background */
 .chat-box-buttons {
   position: absolute;
   bottom: 10px;
@@ -139,19 +139,6 @@ body {
   100% { opacity: 0.6; }
 }
 
-/* 버튼 컨테이너 (예: 복사 버튼) */
-.button-container {
-  position: absolute;
-  bottom: 5px;
-  right: 10px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.chat-box li:hover .button-container {
-  opacity: 1;
-}
-
 /* ===== 입력 영역 ===== */
 .input-container {
   border: 1px solid var(--border-color);
@@ -183,17 +170,22 @@ textarea {
   padding-bottom: 6px;
 }
 
-/* Left controls (activate button and model selector) stay in the top bar */
+/* Left controls: activate button + model selector */
 .left-controls {
   display: flex;
   align-items: center;
   flex: 1;
 }
 
+/* Right controls: settings button stays at far right */
+.right-controls {
+  display: flex;
+  align-items: center;
+}
+
 /* Model selector takes up available space */
 #modelSelect {
   flex: 1;
-  max-width: 250px;
   margin: 0 10px;
   box-sizing: border-box;
   height: 32px;
@@ -255,7 +247,7 @@ textarea {
   transform: scale(0.95);
 }
 
-/* 프롬프트 목록 */
+/* ===== 프롬프트 목록 ===== */
 #promptList {
   list-style: none;
   padding: 0;
@@ -302,7 +294,7 @@ textarea {
   .container {
     padding: 5px;
   }
-  /* Ensure the model selector remains in-line within the top bar */
+  /* Ensure model selector remains inline within the top bar */
   #modelSelect {
     margin: 0 5px;
   }
