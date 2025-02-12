@@ -1,3 +1,19 @@
+const SYSTEM_PROMPT = `
+You are an AI that helps users consume web pages by interpreting a compressed HTML representation and answering their queries based on its structure.
+
+The HTML is provided in the form:
+[ tagName, [child1, child2, ...] ]
+- Text nodes are trimmed strings.
+- Empty text nodes are removed.
+
+### **Rules for Answering Queries:**
+1. **Reference the compressed structure** to answer user queries.
+2. **Use chat history for context** when relevant.
+3. **Follow custom instructions** provided by the user.
+4. **If the requested information is unavailable**, explicitly state that and ask if the user would like to retrieve external information.
+`.trim(); // Default value
+
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "summarize") {
     chrome.storage.sync.get(["openaiApiKey", "anthropicApiKey", "basePrompt"], async (data) => {
@@ -14,18 +30,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       chrome.storage.local.get(["chatHistory"], async (historyData) => {
         let chatHistory = historyData.chatHistory || [];
         let historyText = chatHistory.map(entry => `${entry.sender}: ${entry.text}`).join("\n");
-        const systemPrompt = `${data.basePrompt}\n\nWebpage:\n${request.content}`;
+        const prompt = `
+### **Compressed HTML Representation:**  
+${request.content}
 
-        const userPrompt = `${historyText}`;
-        console.log("System Prompt:", systemPrompt);
-        console.log("User Prompt:", userPrompt);
+### **Custom Instructions:**  
+${request.basePrompt}
 
+### **Conversation History:**  
+${historyText}
+
+Anser to the user's latest message.
+`.trim();
         try {
           let summary;
           if (modelType === "openai") {
-            summary = await callOpenAI(data.openaiApiKey, request.model.name, systemPrompt, userPrompt);
+            summary = await callOpenAI(data.openaiApiKey, request.model.name, SYSTEM_PROMPT, prompt);
           } else if (modelType === "anthropic") {
-            summary = await callAnthropic(data.anthropicApiKey, request.model.name, systemPrompt, userPrompt);
+            summary = await callAnthropic(data.anthropicApiKey, request.model.name, SYSTEM_PROMPT, prompt);
           }
           chrome.runtime.sendMessage({ action: "summary_result", summary });
         } catch (error) {
