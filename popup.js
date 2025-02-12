@@ -22,8 +22,8 @@ const ChatManager = {
   loadChatHistory() {
     chrome.storage.local.get(["chatHistory", "chatScrollPosition"], (data) => {
       if (data.chatHistory?.length > 0) {
-        data.chatHistory.forEach(({ sender, text }) => {
-          this.addMessage(sender, text);
+        data.chatHistory.forEach(({ sender, text, usage }) => {
+          this.addMessage(sender, text, usage);
         });
         if (data.chatScrollPosition !== undefined) {
           DOMElements.chatBox.scrollTop = data.chatScrollPosition;
@@ -35,10 +35,17 @@ const ChatManager = {
   },
 
   saveChatHistory() {
-    const messages = [...DOMElements.chatBox.children].map((li) => ({
-      sender: li.classList.contains("ai-message") ? "AI" : "User",
-      text: li.querySelector(".message-text").innerText
-    }));
+    const messages = [...DOMElements.chatBox.children].map((li) => {
+      const sender = li.classList.contains("ai-message") ? "AI" : "User";
+      const text = li.querySelector(".message-text").innerText;
+      const usageInfo = li.querySelector(".usage-info");
+      const usage = usageInfo ? {
+        inputTokens: usageInfo.querySelector(".input-tokens").innerText.split(": ")[1],
+        outputTokens: usageInfo.querySelector(".output-tokens").innerText.split(": ")[1],
+        totalPrice: parseFloat(usageInfo.querySelector(".price").innerText.split(": ")[1].replace(/\$/, ""))
+      } : null;
+      return { sender, text, usage };
+    });
     chrome.storage.local.set({ chatHistory: messages });
   },
 
@@ -54,7 +61,7 @@ const ChatManager = {
     if (placeholder) placeholder.remove();
   },
 
-  addMessage(sender, text) {
+  addMessage(sender, text, usageInfo = null) {
     if (!DOMElements.chatBox.classList.contains("visible")) {
       DOMElements.chatBox.classList.add("visible");
     }
@@ -74,8 +81,47 @@ const ChatManager = {
     buttonContainer.appendChild(copyBtn);
     messageContainer.appendChild(messageText);
     messageContainer.appendChild(buttonContainer);
+
+    if (usageInfo) {
+      const usageInfoContainer = document.createElement("div");
+      usageInfoContainer.classList.add("usage-info");
+
+      const inputTokens = document.createElement("span");
+      inputTokens.classList.add("input-tokens");
+      inputTokens.innerText = `Input Tokens: ${usageInfo.inputTokens}`;
+
+      const outputTokens = document.createElement("span");
+      outputTokens.classList.add("output-tokens");
+      outputTokens.innerText = `Output Tokens: ${usageInfo.outputTokens}`;
+
+      const price = document.createElement("span");
+      price.classList.add("price");
+      price.innerText = `Price: $${usageInfo.totalPrice.toFixed(4)}`;
+
+      usageInfoContainer.appendChild(inputTokens);
+      usageInfoContainer.appendChild(document.createTextNode(" | "));
+      usageInfoContainer.appendChild(outputTokens);
+      usageInfoContainer.appendChild(document.createTextNode(" | "));
+      usageInfoContainer.appendChild(price);
+
+      messageText.appendChild(usageInfoContainer);
+    }
+
     DOMElements.chatBox.appendChild(messageContainer);
     this.scrollToBottom();
+  },
+
+  addAiResponseMessage(aiResponse, model) {
+    const inputPrice = model.inputPrice * aiResponse.inputTokens / 1000;
+    const outputPrice = model.outputPrice * aiResponse.outputTokens / 1000;
+    const totalPrice = inputPrice + outputPrice;
+    const usageInfo = {
+      inputTokens: aiResponse.inputTokens,
+      outputTokens: aiResponse.outputTokens,
+      totalPrice: totalPrice
+    };
+    const messageText = aiResponse.content;
+    this.addMessage("AI", messageText, usageInfo);
   }
 };
 
@@ -156,6 +202,7 @@ const ContentProcessor = {
 
     // Add user message to chat
     ChatManager.addMessage("User", prompt);
+    ChatManager.saveChatHistory();
     ChatManager.showPlaceholder();
 
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -305,10 +352,11 @@ const UIHelper = {
 };
 
 class Model {
-  constructor(type, name, price = null) {
+  constructor(type, name, inputPrice = null, outputPrice = null) {
     this.type = type; // 'openai' or 'ollama'
     this.name = name;
-    this.price = price; // Price per 1K tokens in USD
+    this.inputPrice = inputPrice; // Input price per 1K tokens in USD
+    this.outputPrice = outputPrice; // Output price per 1K tokens in USD
   }
 
   serialize() {
@@ -316,13 +364,14 @@ class Model {
     return btoa(JSON.stringify({
       type: this.type,
       name: this.name,
-      price: this.price
+      inputPrice: this.inputPrice,
+      outputPrice: this.outputPrice
     }));
   }
 
   static deserialize(value) {
     const decoded = JSON.parse(atob(value));
-    return new Model(decoded.type, decoded.name, decoded.price);
+    return new Model(decoded.type, decoded.name, decoded.inputPrice, decoded.outputPrice);
   }
 }
 
@@ -331,11 +380,11 @@ class ModelManager {
 
   static getDefaultModels() {
     const models = [
-      new Model('openai', 'gpt-4o-mini', 0.00015), // 입력 1K 토큰당 $0.00015, 출력 1K 토큰당 $0.0006
-      new Model('openai', 'gpt-4o', 0.005), // 입력 1K 토큰당 $0.005, 출력 1K 토큰당 $0.015
-      new Model('openai', 'gpt-3.5-turbo', 0.002), // 입력 1K 토큰당 $0.002, 출력 1K 토큰당 $0.002
-      new Model('openai', 'o1-preview', 0.015), // 입력 1K 토큰당 $0.015, 출력 1K 토큰당 $0.06
-      new Model('openai', 'o1-mini', 0.0075), // 입력 1K 토큰당 $0.0075, 출력 1K 토큰당 $0.03
+      new Model('openai', 'gpt-4o-mini', 0.00015, 0.0006), // Input $0.00015 per 1K tokens, Output $0.0006 per 1K tokens
+      new Model('openai', 'gpt-4o', 0.005, 0.015), // Input $0.005 per 1K tokens, Output $0.015 per 1K tokens
+      new Model('openai', 'gpt-3.5-turbo', 0.002, 0.002), // Input $0.002 per 1K tokens, Output $0.002 per 1K tokens
+      new Model('openai', 'o1-preview', 0.015, 0.06), // Input $0.015 per 1K tokens, Output $0.06 per 1K tokens
+      new Model('openai', 'o1-mini', 0.0075, 0.03), // Input $0.0075 per 1K tokens, Output $0.03 per 1K tokens
     ];
     return models;
   }
@@ -344,7 +393,7 @@ class ModelManager {
     try {
       const response = await fetch('http://localhost:11434/api/tags');
       const data = await response.json();
-      return data.models.map(m => new Model('ollama', m.name, 0)); // Local models are free
+      return data.models.map(m => new Model('ollama', m.name, 0, 0)); // Local models are free
     } catch (error) {
       console.error('Error fetching Ollama models:', error);
       return [];
@@ -377,7 +426,7 @@ class ModelManager {
       const option = document.createElement('option');
       option.value = model.serialize();
       const priceText = model.price === 0 ? 'Free' : 
-                       `$${model.price}/1K tokens`;
+                       `Input: $${model.inputPrice}/1K tokens, Output: $${model.outputPrice}/1K tokens`;
       option.textContent = `${model.name} (${model.type}) - ${priceText}`;
       DOMElements.modelSelect.appendChild(option);
     });
@@ -477,7 +526,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Handle incoming messages
   chrome.runtime.onMessage.addListener((message) => {
     if (message.action === "summary_result") {
-      ChatManager.addMessage("AI", message.summary);
+      const selectedModel = ModelManager.getSelectedModel();
+      ChatManager.addAiResponseMessage(message.summary, selectedModel);
       ChatManager.removePlaceholder();
       ChatManager.saveChatHistory();
     }

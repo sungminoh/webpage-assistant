@@ -308,3 +308,16 @@ ul li:hover {
   line-height: 1.3;
   padding: 2px 0;
 }
+
+.usage-info {
+  font-size: 11px;
+  color: #666;
+  margin-top: 2px;
+  display: flex;
+  gap: 3px;
+  justify-content: flex-start;
+}
+
+.input-tokens, .output-tokens, .price {
+  display: inline-block;
+}
