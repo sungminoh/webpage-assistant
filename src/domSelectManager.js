@@ -13,10 +13,10 @@ class DomSelectManager {
       });
 
       if (result?.result) {
-        console.log("DomSelector is already injected.");
+        console.debug("DomSelector is already injected.");
         chrome.tabs.sendMessage(tab.id, { action: "toggleDomSelector" });
       } else {
-        console.log("Injecting content script...");
+        console.debug("Injecting content script...");
         await chrome.scripting.executeScript({
           target: { tabId: tab.id },
           files: ["content/content.js"],
@@ -62,12 +62,12 @@ class DomSelectManager {
   }
 
   async clearSelectedHTML() {
-    await StorageHelper.remove("selectedHTML", "local");
+    await StorageHelper.remove(["selectedHTML", "selectedCSS"], "local");
     const htmlContent = document.getElementById("html-content");
     if (htmlContent) {
       htmlContent.innerHTML = "";
     }
-    console.log("Selected HTML cleared.");
+    console.debug("Selected HTML cleared.");
   }
 
   sendToggleMessage() {

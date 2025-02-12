@@ -60,7 +60,7 @@ class ModelManager {
       const data = await response.json();
       return data.models.map(m => new Model('ollama', m.name, 0, 0)); // Local models are free
     } catch (error) {
-      console.error("Error fetching Ollama models:", error);
+      console.warn("Error fetching Ollama models:", error);
       return [];
     }
   }
