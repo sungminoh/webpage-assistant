@@ -180,17 +180,21 @@ export class ChatManager {
    * @param {object} model - Model information (for cost calculation).
    */
   addAiResponseMessage(aiResponse, model) {
-    const usageInfo = {
-      inputTokens: aiResponse.inputTokens,
-      outputTokens: aiResponse.outputTokens,
-      totalPrice: ((model.inputPrice * aiResponse.inputTokens) + (model.outputPrice * aiResponse.outputTokens)) / 1000
-    };
+    let usageInfo;
+    let content;
+    if (typeof aiResponse !== 'string') {
+      content = aiResponse.content
+      // Calculate the total price based on the model's input and output prices and the number of tokens used.
+      // Only calculate usageInfo if inputTokens and outputTokens are not null.
+      usageInfo = (aiResponse.inputTokens ?? null) !== null && (aiResponse.outputTokens ?? null) !== null
+        ? ((model.inputPrice * aiResponse.inputTokens) + (model.outputPrice * aiResponse.outputTokens)) / 1000
+        : null;
+    }
 
     // If there is a current AI message from streaming, update it instead of appending a new one.
-    if (this.currentAiMessage && this.currentAiMessage.classList.contains("ai-message")) {
-      this.addMessage("AI", aiResponse.content, usageInfo, { updateCurrent: true });
+      this.addMessage("AI", content, usageInfo, { updateCurrent: true });
     } else {
-      this.addMessage("AI", aiResponse.content, usageInfo);
+      this.addMessage("AI", content, usageInfo);
     }
     // Once finalized, clear the placeholder and reset the streaming marker.
     this.removePlaceholder();
