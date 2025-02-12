@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "PageWhale: AI Web Assistant, Smart Page Summarizer & Data Extractor",
+  "name": "PageGenie: AI Web Assistant, Smart Page Summarizer & Data Extractor",
   "version": "1.0",
   "description": "A Chrome extension that uses AI to help you interact with web pages, extract insights, answer your questions, and more.",
   "permissions": [
@@ -20,19 +20,6 @@
       "description": "Toggle DOM selection mode for extracting targeted information"
     }
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content/content.js"
-      ],
-      "css": [
-        "content/content.css"
-      ]
-    }
-  ],
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": {

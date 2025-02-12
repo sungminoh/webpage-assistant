@@ -3,6 +3,30 @@ import { StorageHelper } from "./storageHelper.js";
 
 class DomSelectManager {
   constructor() {
+    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+      if (tabs.length === 0) return; // No active tab found.
+      // Check if DomSelector already exists in the tab
+      const tab = tabs[0]
+      const [result] = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => typeof window.DomSelector !== "undefined",
+      });
+
+      if (result?.result) {
+        console.log("DomSelector is already injected.");
+        chrome.tabs.sendMessage(tab.id, { action: "toggleDomSelector" });
+      } else {
+        console.log("Injecting content script...");
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ["content/content.js"],
+        });
+        await chrome.scripting.insertCSS({
+          target: { tabId: tab.id },
+          files: ["content/content.css"]
+        });
+      }
+    });
     this.active = false;
   }
 
