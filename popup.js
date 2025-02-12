@@ -190,12 +190,21 @@ const ContentProcessor = {
   async submitPrompt(prompt) {
     const selectedModel = ModelManager.getSelectedModel();
 
-    const { openaiApiKey } = await chrome.storage.sync.get("openaiApiKey");
-
-    if (selectedModel.type === 'openai' && !openaiApiKey) {
-      alert("API Key is not set. Please configure it on the options page.");
-      chrome.runtime.openOptionsPage();
-      return;
+    if (selectedModel.type === 'openai') {
+      const { openaiApiKey } = await chrome.storage.sync.get("openaiApiKey");
+      if (!openaiApiKey) {
+        alert("API Key is not set. Please configure it on the options page.");
+        chrome.runtime.openOptionsPage();
+        return;
+      }
+    }
+    if (selectedModel.type === 'anthropic') {
+      const { anthropicApiKey } = await chrome.storage.sync.get("anthropicApiKey");
+      if (!anthropicApiKey) {
+        alert("API Key is not set. Please configure it on the options page.");
+        chrome.runtime.openOptionsPage();
+        return;
+      }
     }
 
     if (!prompt) return;
@@ -378,13 +387,22 @@ class Model {
 class ModelManager {
   static models = [];
 
-  static getDefaultModels() {
+  static getOpenAiModels() {
     const models = [
       new Model('openai', 'gpt-4o-mini', 0.00015, 0.0006), // Input $0.00015 per 1K tokens, Output $0.0006 per 1K tokens
-      new Model('openai', 'gpt-4o', 0.005, 0.015), // Input $0.005 per 1K tokens, Output $0.015 per 1K tokens
       new Model('openai', 'gpt-3.5-turbo', 0.002, 0.002), // Input $0.002 per 1K tokens, Output $0.002 per 1K tokens
-      new Model('openai', 'o1-preview', 0.015, 0.06), // Input $0.015 per 1K tokens, Output $0.06 per 1K tokens
+      new Model('openai', 'gpt-4o', 0.005, 0.015), // Input $0.005 per 1K tokens, Output $0.015 per 1K tokens
       new Model('openai', 'o1-mini', 0.0075, 0.03), // Input $0.0075 per 1K tokens, Output $0.03 per 1K tokens
+      new Model('openai', 'o1-preview', 0.015, 0.06), // Input $0.015 per 1K tokens, Output $0.06 per 1K tokens
+    ];
+    return models;
+  }
+
+  static getAnthropicModels() {
+    const models = [
+      new Model('anthropic', 'claude-3-5-haiku-20241022', 0.00025, 0.00125), // Input $0.00025 per 1K tokens, Output $0.00125 per 1K tokens
+      new Model('anthropic', 'claude-3-5-sonnet-20241022', 0.003, 0.015), // Input $0.003 per 1K tokens, Output $0.015 per 1K tokens
+      new Model('anthropic', 'claude-3-opus-20240229', 0.015, 0.075), // Input $0.015 per 1K tokens, Output $0.075 per 1K tokens
     ];
     return models;
   }
@@ -402,7 +420,10 @@ class ModelManager {
 
   static async loadModels() {
     // Always start with default models
-    ModelManager.models = ModelManager.getDefaultModels();
+    ModelManager.models = [
+      ...ModelManager.getOpenAiModels(),
+      ...ModelManager.getAnthropicModels(),
+    ];
 
     try {
       // Fetch Ollama models asynchronously
