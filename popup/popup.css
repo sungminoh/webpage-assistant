@@ -7,6 +7,9 @@
   --text-color: #abb2bf;
   --border-color: #3e4451;
   --secondary-text-color: #5c6370;
+  --code-bg: #2c313c;
+  --placeholder-bg: #3e4451;
+  --ai-bg: #6b707a;
   --fade-duration: 0.3s;
   --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   --code-font: 'Fira Code', monospace;
@@ -16,9 +19,6 @@
   --topbar-btn-size: 24px;
   --topbar-btn-padding: 4px;
   /* New variables for code backgrounds and other elements */
-  --code-bg: #2c313c;
-  --placeholder-bg: #3e4451;
-  --ai-bg: #6b707a;
 }
 
 /* ===== 기본 레이아웃 ===== */
@@ -40,52 +40,70 @@ body {
 }
 
 /* ===== HTML Preview Area (Markdown Rendering) ===== */
+/* HTML Preview Area */
 .html-container {
   font-family: var(--code-font);
   background-color: var(--container-bg);
   color: var(--text-color);
-  padding: 12px;
+  padding: 8px;            /* Reduced padding */
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   overflow-y: auto;
-  max-height: 220px;
+  max-height: 200px;       /* Slightly lower max height */
 }
 
+/* Headings: reduce spacing */
 .html-container h1,
 .html-container h2,
 .html-container h3 {
   color: var(--primary-color);
-  margin-top: 1em;
-  margin-bottom: 0.4em;
+  margin-top: 0.5em;       /* Tighter top margin */
+  margin-bottom: 0.2em;    /* Tighter bottom margin */
+  font-weight: 600;        /* Ensure readability */
 }
 
+/* Paragraphs: tighter spacing and smaller font */
 .html-container p {
-  line-height: 1.4;
-  margin-bottom: 1em;
+  font-size: 13px;         /* Slightly smaller text */
+  line-height: 1.2;        /* Reduced line height */
+  margin-bottom: 0.6em;    /* Less vertical spacing between paragraphs */
 }
 
+/* Inline code: reduce padding */
 .html-container code {
   background-color: var(--code-bg);
-  padding: 2px 4px;
+  padding: 1px 2px;        /* Tighter padding */
   border-radius: 3px;
   font-family: var(--code-font);
+  font-size: 13px;         /* Match paragraph size */
 }
 
+/* Code blocks: reduced padding and margin */
 .html-container pre {
   background-color: var(--code-bg);
-  padding: 8px;
+  padding: 4px;            /* Reduced padding */
   border-radius: 4px;
   overflow-x: auto;
   font-family: var(--code-font);
+  font-size: 13px;
+  margin: 0.5em 0;         /* Tighter vertical margin */
 }
 
+/* Blockquotes: tighter margins and padding */
 .html-container blockquote {
   border-left: 4px solid var(--primary-color);
-  padding-left: 10px;
+  padding-left: 8px;       /* Reduced padding */
   color: var(--secondary-text-color);
-  margin: 1em 0;
+  margin: 0.5em 0;         /* Tighter margins */
   font-style: italic;
+}
+
+/* Lists: reduce default list margins */
+.html-container ul,
+.html-container ol {
+  margin: 0.5em 0;         /* Tighter spacing */
+  padding-left: 1em;       /* Ensure proper indentation */
 }
 
 /* ===== 채팅 영역 ===== */
@@ -157,37 +175,6 @@ body {
 
 .chat-box li:hover .button-container {
   opacity: 1;
-}
-
-/* Additional markdown styling within chat messages */
-.chat-box li .message-text h1,
-.chat-box li .message-text h2,
-.chat-box li .message-text h3 {
-  color: var(--primary-color);
-  margin: 0.5em 0;
-}
-
-.chat-box li .message-text code {
-  background-color: var(--code-bg);
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-family: var(--code-font);
-}
-
-.chat-box li .message-text pre {
-  background-color: var(--code-bg);
-  padding: 8px;
-  border-radius: 4px;
-  overflow-x: auto;
-  font-family: var(--code-font);
-}
-
-.chat-box li .message-text blockquote {
-  border-left: 4px solid var(--primary-color);
-  padding-left: 10px;
-  color: var(--secondary-text-color);
-  margin: 0.5em 0;
-  font-style: italic;
 }
 
 .user-message {
