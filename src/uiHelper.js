@@ -45,7 +45,7 @@ export class UIHelper {
   }
 
   static createCopyButton(text) {
-    const btn = UIHelper.createSVGButton(
+    return UIHelper.createSVGButton(
       "copy-btn",
       UIHelper.getCopyIcon(),
       async (e) => {
@@ -56,7 +56,6 @@ export class UIHelper {
         }, 2000);
       }
     );
-    return btn;
   }
 
   static getCopyIcon() {
