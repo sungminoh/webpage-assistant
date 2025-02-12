@@ -159,6 +159,21 @@ textarea {
   box-sizing: border-box;
   background: transparent;
 }
+/* Position the top bar inside the input container */
+.top-bar {
+  display: flex;
+  justify-content: space-between; /* Align items to left and right */
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 6px; /* Add spacing below */
+}
+
+/* Align model selector to the right */
+/* Prevent shrinking */
+/* #modelSelect {
+  flex-shrink: 0; 
+  min-width: 150px;
+} */
 
 .bottom-bar {
   display: flex;
@@ -171,7 +186,7 @@ textarea {
 
 #modelSelect {
   padding: 6px 25px 6px 10px;
-  margin-right: 15px;
+  margin-left: 15px;
   font-size: 14px;
   border: 1px solid #007BFF;
   border-radius: 5px;
