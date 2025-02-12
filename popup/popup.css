@@ -464,13 +464,13 @@ textarea {
 }
 
 .drag-handle,
-.remove-btn {
+.close-btn {
   cursor: grab;
   padding: 2px;
 }
 
 .drag-handle svg,
-.remove-btn svg {
+.close-btn svg {
   width: 14px;
   height: 14px;
 }
