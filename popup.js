@@ -192,7 +192,7 @@ const PromptManager = {
 const ContentProcessor = {
   async submitPrompt(prompt) {
     const selectedModel = ModelManager.getSelectedModel();
-    if(!selectedModel){
+    if (!selectedModel) {
       return;
     }
 
@@ -311,19 +311,18 @@ const ContentProcessor = {
 
       function elementToJson(element) {
         if (element.nodeType === 3) {  // TEXT_NODE
-            return element.textContent.trim() || null;
+          return element.textContent.trim() || null;
         }
-        
+
         let obj = {};
         let tag = element.tagName.toLowerCase();
         let children = Array.from(element.childNodes)
-            .map(elementToJson)
-            .filter(child => child !== null);  // Remove empty text nodes
-        
+          .map(elementToJson)
+          .filter(child => child !== null);  // Remove empty text nodes
+
         obj[tag] = [element.textContent.trim() || "", ...children];
         return obj;
-    }
-
+      }
 
       let targetDom = document.body;
       if (selectedHtml) {
@@ -503,7 +502,6 @@ class ModelManager {
 
   static updateModelSelectOptions() {
     if (!DOMElements.modelSelect) return;
-    DOMElements.modelSelect.classList.remove("error");
     DOMElements.modelSelect.innerHTML = '';
 
     ModelManager.models.forEach(model => {
@@ -524,6 +522,7 @@ class ModelManager {
   }
 
   static saveSelectedModel() {
+    DOMElements.modelSelect.classList.remove("error");
     chrome.storage.sync.set({ selectedModel: DOMElements.modelSelect.value });
   }
 
@@ -551,9 +550,24 @@ class DomSelectManager {
   setActive(active) {
     this.active = active;
     DOMElements.activateSelectionBtn.innerHTML = this.active ? `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368"><path d="m500-120-56-56 142-142-142-142 56-56 142 142 142-142 56 56-142 142 142 142-56 56-142-142-142 142Zm-220 0v-80h80v80h-80Zm-80-640h-80q0-33 23.5-56.5T200-840v80Zm80 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80q33 0 56.5 23.5T840-760h-80ZM200-200v80q-33 0-56.5-23.5T120-200h80Zm-80-80v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm640 0v-80h80v80h-80Z"/></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368"><path d="M440-120v-400h400v80H576l264 264-56 56-264-264v264h-80Zm-160 0v-80h80v80h-80Zm-80-640h-80q0-33 23.5-56.5T200-840v80Zm80 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80q33 0 56.5 23.5T840-760h-80ZM200-200v80q-33 0-56.5-23.5T120-200h80Zm-80-80v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm640 0v-80h80v80h-80Z"/></svg>`;
+
+    if (!active) {
+      // Clear selectedHTML when deactivated
+      chrome.storage.local.remove("selectedHTML", () => {
+        console.log("Selected HTML cleared.");
+        document.getElementById("html-content").innerHTML = "";
+      });
+      DOMElements.activateSelectionBtn.classList.remove("highlight");
+    } else {
+      DOMElements.activateSelectionBtn.classList.add("highlight");
+    }
+
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs.length === 0) return;
-      chrome.tabs.sendMessage(tabs[0].id, { action: "toggleDomSelector", active: this.active });
+      chrome.tabs.sendMessage(tabs[0].id, {
+        action: "toggleDomSelector",
+        active: this.active
+      });
     });
   }
 }
