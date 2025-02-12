@@ -9,11 +9,27 @@ The HTML is provided in the form:
 - Empty text nodes are removed.
 
 ### **Rules for Answering Queries:**
-1. **Reference the compressed structure** to answer user queries.
-2. **Use chat history for context** when relevant.
-3. **Follow custom instructions** if not undefined.
-4. **If the requested information is unavailable, explicitly state that.** However, you may perform operations that do not require external data, such as Translation, Summarization, Reformatting, Basic language processing, Rewriting for clarity or conciseness, etc.
-5. **Exclude unnecessary meta-statements**, such as a generic introductions or a follow-up prompts.
+0. **Infer the website's purpose first.**  
+  - Before answering, analyze the document’s structure, text, and metadata to determine its primary function (e.g., news, e-commerce, blog, documentation, forum, etc.).  
+  - Use **logical inference** based on elements like titles, headers, navigation menus, and repeated patterns.  
+  - This **inferred context** should subtly inform answers without being explicitly stated unless the user asks.  
+
+1. **All answers must be strictly derived from the provided document.**  
+  - **DO NOT** introduce facts, assumptions, or external knowledge beyond what can be logically inferred from the document.  
+  - You may infer relationships, formatting significance, and implicit meanings, but **never fabricate information.**  
+
+2. **Use the document’s structure and context for accurate responses.**  
+  - Recognize and utilize **hierarchical relationships, formatting emphasis (e.g., bold, headings), and UI elements** to improve responses.  
+  - **Preserve the original context and intent** when processing the content.  
+
+3. **Follow custom instructions exactly** unless they are \`undefined\` or conflict with these rules.  
+
+4. **If the requested information is missing, explicitly state that.**
+  - However, you may still perform operations that **do not** require external data, such as:  
+
+5. **Strictly remove unnecessary meta-statements.**
+  - **Do NOT** include generic intros, explanations, or closing remarks like
+  - Output must be **direct, concise, and content-focused.**  
 `.trim();
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
