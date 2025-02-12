@@ -1,4 +1,4 @@
-/* popup/popup.css */
+/* popup.css */
 
 /* ===== 기본 테마 변수 (라이트 모드) ===== */
 :root {
@@ -36,7 +36,7 @@ body {
   box-sizing: border-box;
 }
 
-/* HTML 미리보기 영역: 선택 영역 크기를 제한 */
+/* HTML Preview Area */
 .html-container {
   max-height: 180px;
   overflow-y: auto;
@@ -46,13 +46,12 @@ body {
   padding: 6px;
 }
 
-/* ===== 헤더 및 타이틀 ===== */
-h2 {
-  color: var(--text-color);
-  margin: 0 0 10px 0;
+/* ===== 채팅 영역 ===== */
+.chat-container {
+  position: relative; /* for positioning the chat-box buttons */
+  margin-bottom: 10px;
 }
 
-/* ===== 채팅 영역 ===== */
 .chat-box {
   max-height: 400px;
   overflow-y: auto;
@@ -60,13 +59,27 @@ h2 {
   border-radius: 8px 8px 0 0;
   padding: 10px;
   background-color: var(--container-bg);
-  position: relative;
   display: none;
-  margin-bottom: 0;
 }
 
 .chat-box.visible {
   display: block;
+}
+
+/* Chat box buttons: bottom–right, light background, hidden until hover */
+.chat-box-buttons {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.chat-container:hover .chat-box-buttons {
+  opacity: 1;
 }
 
 .fade-out {
@@ -163,46 +176,29 @@ textarea {
 /* ===== 상단 바 (모델 선택 및 버튼 그룹) ===== */
 .top-bar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 6px;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 6px;
 }
 
-.button-group {
-  display: flex;
-  gap: 8px;
-}
-
-.icon-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
+/* Left controls (activate button and model selector) stay in the top bar */
+.left-controls {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 4px;
-  transition: transform 0.2s ease;
+  flex: 1;
 }
 
-.icon-btn:hover svg {
-  fill: var(--primary-color);
-}
-
-.icon-btn:active {
-  transform: scale(0.95);
-}
-
-/* #modelSelect에 box-sizing, min-width, flex-grow 적용 */
+/* Model selector takes up available space */
 #modelSelect {
-  flex-grow: 1;
-  min-width: 0; /* 컨테이너에 맞게 축소 */
+  flex: 1;
+  max-width: 250px;
+  margin: 0 10px;
   box-sizing: border-box;
-  height: 32px;              /* 명시적인 높이 지정 */
-  line-height: 32px;         /* 텍스트의 수직 정렬을 위해 */
-  padding: 0 10px;           /* 수직 패딩 제거, 좌우 패딩 유지 */
-  margin-left: 10px;
+  height: 32px;
+  line-height: 32px;
+  padding: 0 10px;
   font-size: 14px;
   border: 1px solid var(--primary-color);
   border-radius: 5px;
@@ -220,9 +216,43 @@ textarea {
   background-size: 14px;
 }
 
-#modelSelect:hover, #modelSelect:focus {
+#modelSelect:hover,
+#modelSelect:focus {
   border-color: #0056b3;
   background-color: #eef;
+}
+
+/* ===== 버튼 그룹 ===== */
+.button-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* Prompt buttons aligned to the right */
+.prompt-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Icon button styling */
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: transform 0.2s ease;
+}
+
+.icon-btn:hover svg {
+  fill: var(--primary-color);
+}
+
+.icon-btn:active {
+  transform: scale(0.95);
 }
 
 /* 프롬프트 목록 */
@@ -252,12 +282,14 @@ textarea {
 }
 
 /* 드래그 핸들 및 삭제 버튼 */
-.drag-handle, .delete-btn {
+.drag-handle,
+.delete-btn {
   cursor: grab;
   padding: 2px;
 }
 
-.drag-handle svg, .delete-btn svg {
+.drag-handle svg,
+.delete-btn svg {
   width: 16px;
   height: 16px;
 }
@@ -270,8 +302,8 @@ textarea {
   .container {
     padding: 5px;
   }
+  /* Ensure the model selector remains in-line within the top bar */
   #modelSelect {
-    margin-left: 0;
-    margin-top: 10px;
+    margin: 0 5px;
   }
 }
