@@ -10,13 +10,12 @@
   <div class="container">
     <!-- HTML Preview Area (Markdown rendered) -->
     <section class="html-container">
-      <div id="html-content"></div>
     </section>
 
     <!-- Chat Area -->
     <section class="chat-container">
       <ul id="chat" class="chat-box">
-        <!-- Chat messages will be appended here -->
+        <!-- Chat messages will be appended here by chatManager -->
       </ul>
       <div class="chat-box-buttons">
         <button id="clearChatBtn" class="icon-btn" aria-label="Clear chat">
@@ -30,6 +29,7 @@
     <!-- Input Area -->
     <section class="input-container">
       <div class="top-bar">
+        <!-- Left controls -->
         <div class="left-controls">
           <div class="button-group">
             <button id="activateSelectionBtn" class="icon-btn" aria-label="Activate DOM selection">
@@ -38,10 +38,19 @@
               </svg>
             </button>
           </div>
+        </div>
+
+        <!-- Model selector container centered in top-bar -->
+        <div class="model-container">
           <select id="modelSelect" aria-label="Select Model">
             <!-- Options will be populated via JS -->
+            <option value="model1">Model 1: Default Long Name Example</option>
+            <option value="model2">Model 2</option>
+            <option value="model3">Model 3</option>
           </select>
         </div>
+
+        <!-- Right controls -->
         <div class="right-controls">
           <div class="button-group">
             <button id="settingsBtn" class="icon-btn" aria-label="Settings">
