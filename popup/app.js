@@ -132,7 +132,7 @@ function handleIncomingMessages(message) {
   if (message.action === "stream_update") {
     // chatManager 인스턴스는 전역 또는 initializeApp 내부에서 생성되어 있어야 합니다.
     chatManager.appendToLastAiMessage(message.chunk);
-  } else if (message.action === "summary_result") {
+  } else if (message.action === "response_result") {
     const selectedModel = ModelManager.getSelectedModel();
     if (selectedModel && message.summary) {
       chatManager.addAiResponseMessage(message.summary, selectedModel);
