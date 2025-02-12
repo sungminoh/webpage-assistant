@@ -5,7 +5,7 @@ class DomSelector {
         this.currentElement = null;
         this.createOverlay();
         this.createESCMenu();
-        this.createPreviewBox();
+        // this.createPreviewBox();
 
         document.addEventListener("keydown", this.handleKeydown.bind(this));
     }
@@ -75,9 +75,11 @@ class DomSelector {
                 y: event.clientY + window.scrollY
             };
             chrome.runtime.sendMessage({ action: "click_target_dom", html: event.target.outerHTML });
+                   // Request popup to open
+            chrome.runtime.sendMessage({ action: "open_popup" });
 
             // Show selected element preview
-            this.updatePreviewBox(event.target);
+            // this.updatePreviewBox(event.target);
         }
         // chrome.action.openPopup();
     }
@@ -130,33 +132,33 @@ class DomSelector {
         document.body.appendChild(this.escMenu);
     }
 
-    createPreviewBox() {
-        this.previewBox = document.createElement("div");
-        this.previewBox.style.position = "fixed";
-        this.previewBox.style.right = "20px";
-        this.previewBox.style.top = "60px";
-        this.previewBox.style.width = "300px";
-        this.previewBox.style.maxHeight = "400px";
-        this.previewBox.style.overflowY = "auto";
-        this.previewBox.style.background = "rgba(255, 255, 255, 0.95)";
-        this.previewBox.style.color = "#333";
-        this.previewBox.style.padding = "10px";
-        this.previewBox.style.border = "1px solid #ccc";
-        this.previewBox.style.borderRadius = "8px";
-        this.previewBox.style.boxShadow = "0 4px 10px rgba(0, 0, 0, 0.2)";
-        this.previewBox.style.zIndex = "10000";
-        this.previewBox.style.display = "none"; // Initially hidden
+    // createPreviewBox() {
+    //     this.previewBox = document.createElement("div");
+    //     this.previewBox.style.position = "fixed";
+    //     this.previewBox.style.right = "20px";
+    //     this.previewBox.style.top = "60px";
+    //     this.previewBox.style.width = "300px";
+    //     this.previewBox.style.maxHeight = "400px";
+    //     this.previewBox.style.overflowY = "auto";
+    //     this.previewBox.style.background = "rgba(255, 255, 255, 0.95)";
+    //     this.previewBox.style.color = "#333";
+    //     this.previewBox.style.padding = "10px";
+    //     this.previewBox.style.border = "1px solid #ccc";
+    //     this.previewBox.style.borderRadius = "8px";
+    //     this.previewBox.style.boxShadow = "0 4px 10px rgba(0, 0, 0, 0.2)";
+    //     this.previewBox.style.zIndex = "10000";
+    //     this.previewBox.style.display = "none"; // Initially hidden
 
-        // Add title
-        this.previewBox.innerHTML = `<strong>Selected Element:</strong><pre id="preview-content" style="white-space: pre-wrap; word-wrap: break-word;"></pre>`;
+    //     // Add title
+    //     this.previewBox.innerHTML = `<strong>Selected Element:</strong><pre id="preview-content" style="white-space: pre-wrap; word-wrap: break-word;"></pre>`;
 
-        document.body.appendChild(this.previewBox);
-    }
+    //     document.body.appendChild(this.previewBox);
+    // }
 
-    updatePreviewBox(element) {
-        document.getElementById("preview-content").textContent = element.outerHTML;
-        this.previewBox.style.display = "block"; // Show preview
-    }
+    // updatePreviewBox(element) {
+    //     document.getElementById("preview-content").textContent = element.outerHTML;
+    //     this.previewBox.style.display = "block"; // Show preview
+    // }
 }
 
 // Initialize DomSelector
@@ -167,3 +169,4 @@ chrome.runtime.onMessage.addListener(domSelector.handleToggleMessage.bind(domSel
 document.addEventListener("mouseover", domSelector.handleMouseOver.bind(domSelector));
 document.addEventListener("click", domSelector.handleClick.bind(domSelector));
 document.addEventListener("keydown", domSelector.handleKeydown.bind(domSelector));
+

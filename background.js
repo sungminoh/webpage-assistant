@@ -123,5 +123,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "click_target_dom") {
     chrome.storage.local.set({ selectedHTML: message.html });
   }
+
+  if (message.action === "open_popup") {
+    chrome.action.openPopup();
+  }
 });
 
