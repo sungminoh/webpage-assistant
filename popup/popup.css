@@ -230,7 +230,7 @@ body {
   position: absolute;
   bottom: 6px;
   right: 6px;
-  background-color: rgba(40, 44, 52, 0.8);
+  background-color: var(--container-bg);
   padding: 2px;
   border-radius: 3px;
   opacity: 0;
