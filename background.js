@@ -11,8 +11,9 @@ The HTML is provided in the form:
 ### **Rules for Answering Queries:**
 1. **Reference the compressed structure** to answer user queries.
 2. **Use chat history for context** when relevant.
-3. **Follow custom instructions** provided by the user.
-4. **If the requested information is unavailable**, explicitly state that and ask if the user would like to retrieve external information.
+3. **Follow custom instructions** if not undefined.
+4. **If the requested information is unavailable, explicitly state that.** However, you may perform operations that do not require external data, such as Translation, Summarization, Reformatting, Basic language processing, Rewriting for clarity or conciseness, etc.
+5. **Exclude unnecessary meta-statements**, such as a generic introductions or a follow-up prompts.
 `.trim();
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
