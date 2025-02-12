@@ -93,6 +93,7 @@ h2 {
 
 .message-text {
   word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .button-container {
