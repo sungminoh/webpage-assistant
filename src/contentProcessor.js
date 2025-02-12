@@ -3,6 +3,7 @@ import { StorageHelper } from "./storageHelper.js";
 import { chatManager } from "./chatManager.js";
 import { ModelManager } from "./modelManager.js";
 
+const ALLOWED_ATTRS = { a: ["href"], img: ["src", "alt"], iframe: ["src"] };
 class ContentProcessor {
   static async submitPrompt(prompt) {
     if (!prompt) return;
@@ -27,8 +28,7 @@ class ContentProcessor {
           "aside", ".ads", ".footer", ".header", ".sidebar"
         ]).forEach(el => el.remove());
         cleaned.querySelectorAll("*").forEach(el => {
-          const allowedAttrs = { a: ["href"], img: ["src", "alt"], iframe: ["src"] };
-          const allowed = allowedAttrs[el.tagName.toLowerCase()] || [];
+          const allowed = ALLOWED_ATTRS[el.tagName.toLowerCase()] || [];
           [...el.attributes].forEach(attr => {
             if (!allowed.includes(attr.name)) el.removeAttribute(attr.name);
           });
@@ -63,6 +63,16 @@ class ContentProcessor {
         const childArray = [...node.childNodes]
           .map(elementToArray)
           .filter(child => child !== null);
+        // Add attributes as the first element if it's not empty
+        const attributes = (ALLOWED_ATTRS[node.tagName.toLowerCase()] || [])
+          .reduce((acc, attr) => {
+            const attribute = node.attributes[attr];
+            if (attribute) acc[attribute.name] = attribute.value;
+            return acc;
+          }, {});
+        if (Object.keys(attributes).length > 0) {
+          childArray.unshift(attributes);
+        }
         return [tagName, childArray];
       }
 
