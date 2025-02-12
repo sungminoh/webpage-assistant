@@ -4,19 +4,46 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Settings</title>
+  <!-- Reuse the shared CSS from popup -->
+  <link rel="stylesheet" href="../popup/popup.css">
   <link rel="stylesheet" href="options.css">
+  <!-- (Optional) Link to an additional options-specific CSS file -->
+  <!-- <link rel="stylesheet" href="options.css"> -->
 </head>
 <body>
-  <h2>Settings</h2>
-  <label for="openaiApiKeyInput">OpenAI API Key:</label>
-  <input type="password" id="openaiApiKeyInput" placeholder="Enter your OpenAI API Key" />
-  <label for="anthropicApiKeyInput">Anthropic API Key:</label>
-  <input type="password" id="anthropicApiKeyInput" placeholder="Enter your Anthropic API Key" />
-  <label for="basePromptInput">Base Prompt:</label>
-  <textarea id="basePromptInput" placeholder="Enter your base prompt..."></textarea>
-  <button id="themeToggleBtn">Toggle Theme</button>
-  <button id="saveBtn">Save</button>
-  <p id="status"></p>
+  <div id="optionsWrapper" class="container options-container">
+    <h2 class="options-heading">Settings</h2>
+    
+    <div class="options-field">
+      <label for="openaiApiKeyInput" class="options-label">OpenAI API Key:</label>
+      <input type="password" id="openaiApiKeyInput" class="options-input" placeholder="Enter your OpenAI API Key" />
+    </div>
+    
+    <div class="options-field">
+      <label for="anthropicApiKeyInput" class="options-label">Anthropic API Key:</label>
+      <input type="password" id="anthropicApiKeyInput" class="options-input" placeholder="Enter your Anthropic API Key" />
+    </div>
+    
+    <div class="options-field">
+      <label for="basePromptInput" class="options-label">Base Prompt:</label>
+      <textarea id="basePromptInput" class="options-textarea" placeholder="Enter your base prompt..."></textarea>
+    </div>
+    
+    <!-- Theme selector: a new field with a dedicated select element -->
+    <div class="options-field">
+      <label for="themeSelect" class="options-label">Theme:</label>
+      <select id="themeSelect" class="options-select">
+        <option value="light">Light Default</option>
+        <option value="dark">Dark Coding</option>
+        <option value="pastel">Pastel</option>
+        <option value="neon">Neon</option>
+        <option value="contrast">High Contrast</option>
+      </select>
+    </div>
+    
+    <button id="saveBtn" class="options-save-btn">Save</button>
+    <p id="status" class="options-status"></p>
+  </div>
   <script src="options.js"></script>
 </body>
 </html>

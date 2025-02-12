@@ -1,59 +1,47 @@
-/* options/options.css */
-body {
-  font-family: Arial, sans-serif;
-  max-width: 380px;
-  margin: 40px auto;
+.options-container {
+  /* Options page overrides */
+  background-color: var(--container-bg); /* or a new value */
   padding: 15px;
-  background-color: #fafafa;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  text-align: center;
-  color: #333;
 }
-
-h2 {
-  margin-bottom: 16px;
-  font-size: 20px;
+.options-heading {
+  font-size: 22px;
+  margin-bottom: 20px;
 }
-
-label {
-  display: block;
-  text-align: left;
+.options-field {
   margin-top: 12px;
-  font-weight: bold;
-  font-size: 14px;
+  text-align: left;
 }
-
-input, textarea {
+.options-label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 4px;
+}
+.options-input,
+.options-textarea,
+.options-select {
   width: 100%;
   padding: 8px;
-  margin-top: 6px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
-  font-size: 14px;
   box-sizing: border-box;
+  font-size: 14px;
 }
-
-button {
+.options-save-btn {
   width: 100%;
   padding: 10px;
   margin-top: 20px;
-  background-color: #0056b3;
-  color: #fff;
+  background-color: var(--primary-color);
+  color: var(--text-color);
   border: none;
   border-radius: 4px;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
-
-button:hover {
-  background-color: #004494;
+.options-save-btn:hover {
+  background-color: var(--secondary-color);
 }
-
-@media (max-width: 400px) {
-  body {
-    margin: 20px;
-    padding: 12px;
-  }
+.options-status {
+  margin-top: 10px;
+  font-size: 14px;
 }
