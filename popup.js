@@ -362,7 +362,13 @@ class UIHelper {
   }
 
   static createCopyButton(text) {
-    return UIHelper.createSVGButton("copy-btn", UIHelper.getCopyIcon(), async () => UIHelper.handleCopy(copyBtn, text));
+    const container = UIHelper.createElement("div", "copy-btn-container");
+    container.appendChild(UIHelper.createSVGButton(
+      "copy-btn",
+      UIHelper.getCopyIcon(),
+      async (e) => UIHelper.handleCopy(container, text)
+    ));
+    return container; // Ensure the container is returned
   }
 
   static async handleCopy(btn, text) {
