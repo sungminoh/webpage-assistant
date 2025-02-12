@@ -352,3 +352,20 @@ ul li:hover {
   border-radius: 4px;
   white-space: pre-wrap;
 }
+
+/* Highlight model selection dropdown in red if no model is selected */
+#modelSelect.error {
+  border-color: #FF5733;
+  background: #FFE5E5;
+  color: #FF0000;
+  animation: shake 0.2s ease-in-out 2;
+}
+
+/* Shake effect to grab user attention */
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}

@@ -192,6 +192,9 @@ const PromptManager = {
 const ContentProcessor = {
   async submitPrompt(prompt) {
     const selectedModel = ModelManager.getSelectedModel();
+    if(!selectedModel){
+      return;
+    }
 
     if (selectedModel.type === 'openai') {
       const { openaiApiKey } = await chrome.storage.sync.get("openaiApiKey");
@@ -500,7 +503,7 @@ class ModelManager {
 
   static updateModelSelectOptions() {
     if (!DOMElements.modelSelect) return;
-
+    DOMElements.modelSelect.classList.remove("error");
     DOMElements.modelSelect.innerHTML = '';
 
     ModelManager.models.forEach(model => {
@@ -525,8 +528,13 @@ class ModelManager {
   }
 
   static getSelectedModel() {
-    const selectedValue = DOMElements.modelSelect.value;
-    return Model.deserialize(selectedValue);
+    try {
+      const selectedValue = DOMElements.modelSelect.value;
+      return Model.deserialize(selectedValue);
+    } catch (error) {
+      DOMElements.modelSelect.classList.add("error");
+      return null;
+    }
   }
 }
 
