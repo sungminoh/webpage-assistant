@@ -15,8 +15,11 @@ export class ChatManager {
     this.currentAiMessage = null; // To keep track of the ongoing AI response
   }
 
-  scrollToBottom() {
-    this.chatBox.scrollTop = this.chatBox.scrollHeight;
+  scrollToBottom(alwaysScroll = false) {
+    const isAtBottom = this.chatBox.scrollHeight - this.chatBox.scrollTop <= 1.2 * this.chatBox.clientHeight;
+    if (alwaysScroll || isAtBottom) {
+      this.chatBox.scrollTop = this.chatBox.scrollHeight;
+    }
   }
 
   saveScrollPosition() {
@@ -89,47 +92,47 @@ export class ChatManager {
   addMessage(sender, text, usageInfo = null, options = {}) {
     // If sender is AI and updateCurrent is true and we already have an ongoing AI message,
     // update that instead of appending a new one.
+    let li;
     if (sender === "AI" && options.updateCurrent && this.currentAiMessage) {
-      const textEl = this.currentAiMessage.querySelector(".message-text");
+      li = this.currentAiMessage;
+      const textEl = li.querySelector(".message-text");
       // Re-render markdown for updated text
       textEl.innerHTML = marked.parse(text);
       if (usageInfo) {
         const usageHTML = this.createUsageInfo(usageInfo);
-        let usageEl = this.currentAiMessage.querySelector(".usage-info");
+        let usageEl = li.querySelector(".usage-info");
         if (usageEl) {
           usageEl.innerHTML = usageHTML;
         } else {
           textEl.insertAdjacentHTML("afterend", usageHTML);
         }
       }
-      this.scrollToBottom();
-      return;
+    } else {
+      // Otherwise, create a new message element.
+      if (!this.chatBox.classList.contains("visible")) {
+        this.chatBox.classList.add("visible");
+      }
+
+      li = document.createElement("li");
+      li.classList.add(sender === "AI" ? "ai-message" : "user-message");
+
+      // Render the message text as Markdown
+      const renderedText = marked.parse(text);
+
+      li.innerHTML = `
+        <div>
+          <span class="message-text">${renderedText}</span>
+          ${usageInfo ? this.createUsageInfo(usageInfo) : ""}
+        </div>
+        <div class="button-container"></div>
+      `;
+
+      // If it's an AI message, update currentAiMessage.
+      if (sender === "AI") {
+        this.currentAiMessage = li;
+      }
     }
-
-    // Otherwise, create a new message element.
-    if (!this.chatBox.classList.contains("visible")) {
-      this.chatBox.classList.add("visible");
-    }
-
-    const li = document.createElement("li");
-    li.classList.add(sender === "AI" ? "ai-message" : "user-message");
-
-    // Render the message text as Markdown
-    const renderedText = marked.parse(text);
-
-    li.innerHTML = `
-      <div>
-        <span class="message-text">${renderedText}</span>
-        ${usageInfo ? this.createUsageInfo(usageInfo) : ""}
-      </div>
-      <div class="button-container"></div>
-    `;
-
-    // If it's an AI message, update currentAiMessage.
-    if (sender === "AI") {
-      this.currentAiMessage = li;
-    }
-
+    // add buttons
     const buttonContainer = li.querySelector(".button-container");
     if (buttonContainer) {
       // Create a delete button
