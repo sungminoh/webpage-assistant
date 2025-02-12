@@ -1,12 +1,15 @@
 /* content/content.css */
+
+/* 선택된 요소 강조 (DOM 선택 시) */
 [data-selected="true"] {
-    background-color: rgba(255, 99, 71, 0.4);
-    outline: 3px solid rgba(255, 69, 0, 0.8);
-    box-shadow: 0 0 10px rgba(255, 69, 0, 0.6);
-  }
-  
-  [data-hovered="true"] {
-    background-color: rgba(173, 216, 230, 0.4);
-    outline: 2px dashed rgba(70, 130, 180, 0.7);
-    box-shadow: 0 0 6px rgba(70, 130, 180, 0.5);
-  }
+  outline: 3px solid rgba(255, 69, 0, 0.8);
+  background-color: rgba(255, 99, 71, 0.4);
+  box-shadow: 0 0 8px rgba(255, 69, 0, 0.6);
+}
+
+/* 마우스 호버된 요소 강조 */
+[data-hovered="true"] {
+  outline: 2px dashed rgba(70, 130, 180, 0.7);
+  background-color: rgba(173, 216, 230, 0.4);
+  box-shadow: 0 0 6px rgba(70, 130, 180, 0.5);
+}
