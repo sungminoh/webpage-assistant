@@ -219,6 +219,30 @@ const ContentProcessor = {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
 
     function processPageContent(prompt, model) {
+      function removeUnnecessaryTags(dom) {
+        const doc = dom.cloneNode(true); // Clone the original document to avoid modifying it directly
+        // Remove unnecessary elements
+        doc.querySelectorAll([
+          "script", 
+          "style", 
+          // "iframe", 
+          "noscript", 
+          // "img", 
+          "meta", 
+          "link", 
+          // "button", 
+          // "input", 
+          // "form", 
+          "aside", 
+          ".ads", 
+          ".footer", 
+          ".header", 
+          ".sidebar"
+        ])
+          .forEach(el => el.remove());
+        return doc;
+      }
+
       function removeUnnecessaryAttributes(dom) {
         const clonedBody = dom.cloneNode(true);
         const allowedAttributes = {
@@ -282,13 +306,39 @@ const ContentProcessor = {
         return compress(element);
       }
 
-      const cleanedDom = removeUnnecessaryAttributes(document.body);
+      function elementToJson(element) {
+        if (!element || element.nodeType !== 1) return null; // Ignore non-element nodes
+    
+        let tag = element.tagName.toLowerCase();
+        let textContent = element.childNodes.length === 1 && element.childNodes[0].nodeType === 3 
+          ? element.textContent.trim() 
+          : null;
+    
+        let children = Array.from(element.children)
+          .map(elementToJson)
+          .filter(child => child !== null);
+    
+        if (textContent && children.length > 0) {
+          return { [tag]: [textContent, children] }; // Store both text & children
+        }
+    
+        if (textContent) return { [tag]: textContent }; // Store only text if no children
+        if (children.length === 1) return { [tag]: children[0] }; // No array for single child
+        if (children.length > 1) return { [tag]: children }; // Store multiple children
+    
+        return { [tag]: null }; // Empty tag
+      }
+    
+      const removedDom = removeUnnecessaryTags(document.body);
+      const cleanedDom = removeUnnecessaryAttributes(removedDom);
       const simplifedDom = removeEmptyTags(cleanedDom);
       const compressedDom = compressDOM(simplifedDom);
+      const jsonDom = elementToJson(compressedDom);
+      const content = JSON.stringify(jsonDom);
 
       chrome.runtime.sendMessage({
         action: "summarize",
-        content: compressedDom.innerHTML.trim(),
+        content: content,
         model,
         prompt
       });
