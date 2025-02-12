@@ -1,23 +1,12 @@
-// const observer = new MutationObserver(() => {
-//   let content = document.body.innerText;
-//   let prompt = document.getElementById("customPrompt").value.trim();
-//   chrome.runtime.sendMessage({
-//     action: "summarize",
-//     text: content,
-//     model: document.getElementById("modelSelect").value,
-//     prompt: prompt
-//   });
-// });
-
-// observer.observe(document.body, { childList: true, subtree: true });
-
-
 class DomSelector {
     constructor() {
         this.selectionActive = false;
         this.selectedElement = null;
         this.currentElement = null;
-        // this.createFloatingPopup();
+        this.createOverlay();
+        this.createESCMenu();
+
+        document.addEventListener("keydown", this.handleKeydown.bind(this));
     }
 
     reset() {
@@ -27,23 +16,26 @@ class DomSelector {
         this.clearBoundary(this.currentElement);
         this.currentElement = null;
         chrome.runtime.sendMessage({ action: "click_target_dom", html: "" });
-        // // Hide popup if open
-        // if (this.popup) {
-        //     this.popup.style.display = "none";
-        // }
+
+        // Hide overlay & ESC menu
+        this.overlay.style.display = "none";
+        this.escMenu.style.display = "none";
     }
 
     handleKeydown(event) {
         if (event.key === "Escape") {
             console.log("ESC Pressed: Closing selection mode");
-            this.reset()
+            this.reset();
         }
     }
 
     handleToggleMessage(message, sender, sendResponse) {
         if (message.action === "toggleDomSelector") {
             this.selectionActive = message.active;
-            if (!this.selectionActive) {
+            if (this.selectionActive) {
+                this.overlay.style.display = "block";
+                this.escMenu.style.display = "block";
+            } else {
                 this.reset();
             }
         }
@@ -54,7 +46,7 @@ class DomSelector {
         if (this.currentElement && this.currentElement !== this.selectedElement) {
             this.clearBoundary(this.currentElement);
         }
-        
+
         if (this.currentElement !== event.target && this.selectedElement !== event.target) {
             this.currentElement = event.target;
             this.markHoverBoundary(this.currentElement);
@@ -79,20 +71,20 @@ class DomSelector {
                 x: event.clientX + window.scrollX,
                 y: event.clientY + window.scrollY
             };
-            chrome.runtime.sendMessage({action: "click_target_dom", html: event.target.outerHTML});
-            // this.showPopup(position, event.target.outerHTML);
+            chrome.runtime.sendMessage({ action: "click_target_dom", html: event.target.outerHTML });
         }
+        chrome.action.openPopup();
     }
 
     markSelectedBoundary(element) {
         element.removeAttribute("data-hovered");
-        element.setAttribute("data-selected", "true"); // CSS가 자동 적용됨
+        element.setAttribute("data-selected", "true");
     }
-    
+
     markHoverBoundary(element) {
-        element.setAttribute("data-hovered", "true"); // CSS가 자동 적용됨
+        element.setAttribute("data-hovered", "true");
     }
-    
+
     clearBoundary(element) {
         if (element) {
             element.removeAttribute("data-selected");
@@ -100,52 +92,44 @@ class DomSelector {
         }
     }
 
-
-    createFloatingPopup() {
-        this.popup = document.createElement("div");
-        this.popup.style.position = "absolute";
-        this.popup.style.display = "none";
-        this.popup.style.background = "white";
-        this.popup.style.border = "1px solid #ccc";
-        this.popup.style.boxShadow = "0 2px 10px rgba(0,0,0,0.3)";
-        this.popup.style.padding = "10px";
-        this.popup.style.zIndex = "10000";
-        this.popup.style.maxWidth = "300px";
-        this.popup.innerHTML = `
-            <div id="popup-content"></div>
-            <button id="close-popup" style="margin-top:10px;">닫기</button>
-        `;
-        document.body.appendChild(this.popup);
-
-        document.getElementById("close-popup").addEventListener("click", () => {
-            this.popup.style.display = "none";
-        });
+    createOverlay() {
+        this.overlay = document.createElement("div");
+        this.overlay.style.position = "fixed";
+        this.overlay.style.top = "0";
+        this.overlay.style.left = "0";
+        this.overlay.style.width = "100%";
+        this.overlay.style.height = "100%";
+        this.overlay.style.background = "rgba(0, 0, 0, 0.6)";
+        this.overlay.style.zIndex = "9998";
+        this.overlay.style.display = "none";
+        this.overlay.style.pointerEvents = "none"; // Prevent interaction
+        document.body.appendChild(this.overlay);
     }
 
-    // showPopup(position, htmlContent) {
-    //     document.getElementById("popup-content").innerText = htmlContent;
-    //     this.popup.style.left = `${position.x + 10}px`;
-    //     this.popup.style.top = `${position.y + 10}px`;
-    //     this.popup.style.display = "block";
-    // }
-    // showPopup(position) {
-    //     fetch(chrome.runtime.getURL("popup.html"))
-    //         .then(response => response.text())
-    //         .then(html => {
-    //             document.getElementById("popup-content").innerHTML = html;
-    //             this.popup.style.left = `${position.x + 10}px`;
-    //             this.popup.style.top = `${position.y + 10}px`;
-    //             this.popup.style.display = "block";
-    //         }).catch(e => {
-    //             debugger;
-    //         });
-    // }
+    createESCMenu() {
+        this.escMenu = document.createElement("div");
+        this.escMenu.innerHTML = "🔍 Selection Mode Active – Press <b>ESC</b> to exit.";
+        this.escMenu.style.position = "fixed";
+        this.escMenu.style.top = "10px";
+        this.escMenu.style.left = "50%";
+        this.escMenu.style.transform = "translateX(-50%)";
+        this.escMenu.style.padding = "10px 20px";
+        this.escMenu.style.background = "#222";
+        this.escMenu.style.color = "#fff";
+        this.escMenu.style.borderRadius = "8px";
+        this.escMenu.style.fontSize = "14px";
+        this.escMenu.style.zIndex = "9999";
+        this.escMenu.style.display = "none";
+        this.escMenu.style.boxShadow = "0px 4px 8px rgba(0, 0, 0, 0.3)";
+        document.body.appendChild(this.escMenu);
+    }
 }
 
+// Initialize DomSelector
 const domSelector = new DomSelector();
 
+// Event listeners
 chrome.runtime.onMessage.addListener(domSelector.handleToggleMessage.bind(domSelector));
-
 document.addEventListener("mouseover", domSelector.handleMouseOver.bind(domSelector));
 document.addEventListener("click", domSelector.handleClick.bind(domSelector));
 document.addEventListener("keydown", domSelector.handleKeydown.bind(domSelector));
