@@ -217,27 +217,26 @@ const ContentProcessor = {
     ChatManager.saveChatHistory();
     ChatManager.showPlaceholder();
 
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    function processPageContent(prompt, model) {
+    function processPageContent(prompt, model, selectedHtml) {
       function removeUnnecessaryTags(dom) {
         const doc = dom.cloneNode(true); // Clone the original document to avoid modifying it directly
         // Remove unnecessary elements
         doc.querySelectorAll([
-          "script", 
-          "style", 
+          "script",
+          "style",
           // "iframe", 
-          "noscript", 
+          "noscript",
           // "img", 
-          "meta", 
-          "link", 
+          "meta",
+          "link",
           // "button", 
           // "input", 
           // "form", 
-          "aside", 
-          ".ads", 
-          ".footer", 
-          ".header", 
+          "aside",
+          ".ads",
+          ".footer",
+          ".header",
           ".sidebar"
         ])
           .forEach(el => el.remove());
@@ -308,29 +307,28 @@ const ContentProcessor = {
       }
 
       function elementToJson(element) {
-        if (!element || element.nodeType !== 1) return null; // Ignore non-element nodes
-    
-        let tag = element.tagName.toLowerCase();
-        let textContent = element.childNodes.length === 1 && element.childNodes[0].nodeType === 3 
-          ? element.textContent.trim() 
-          : null;
-    
-        let children = Array.from(element.children)
-          .map(elementToJson)
-          .filter(child => child !== null);
-    
-        if (textContent && children.length > 0) {
-          return { [tag]: [textContent, children] }; // Store both text & children
+        if (element.nodeType === 3) {  // TEXT_NODE
+            return element.textContent.trim() || null;
         }
-    
-        if (textContent) return { [tag]: textContent }; // Store only text if no children
-        if (children.length === 1) return { [tag]: children[0] }; // No array for single child
-        if (children.length > 1) return { [tag]: children }; // Store multiple children
-    
-        return { [tag]: null }; // Empty tag
+        
+        let obj = {};
+        let tag = element.tagName.toLowerCase();
+        let children = Array.from(element.childNodes)
+            .map(elementToJson)
+            .filter(child => child !== null);  // Remove empty text nodes
+        
+        obj[tag] = [element.textContent.trim() || "", ...children];
+        return obj;
+    }
+
+
+      let targetDom = document.body;
+      if (selectedHtml) {
+        // const parser = new DOMParser();
+        // targetDom = parser.parseFromString(selectedHtml, "text/html");
+        targetDom = document.createRange().createContextualFragment(selectedHtml).firstElementChild;
       }
-    
-      const removedDom = removeUnnecessaryTags(document.body);
+      const removedDom = removeUnnecessaryTags(targetDom);
       const cleanedDom = removeUnnecessaryAttributes(removedDom);
       const simplifedDom = removeEmptyTags(cleanedDom);
       const compressedDom = compressDOM(simplifedDom);
@@ -345,11 +343,19 @@ const ContentProcessor = {
       });
     }
 
-    chrome.scripting.executeScript({
-      target: { tabId: tabs[0].id },
-      function: processPageContent,
-      args: [prompt, selectedModel]
+    chrome.storage.local.get("selectedHTML", function (data) {
+      if (data.selectedHTML) {
+        processPageContent(prompt, selectedModel, data.selectedHTML)
+      } else {
+        const tabs = chrome.tabs.query({ active: true, currentWindow: true });
+        chrome.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          function: processPageContent,
+          args: [prompt, selectedModel]
+        });
+      }
     });
+
   }
 };
 
@@ -500,8 +506,8 @@ class ModelManager {
     ModelManager.models.forEach(model => {
       const option = document.createElement('option');
       option.value = model.serialize();
-      const priceText = model.price === 0 ? 'Free' : 
-                       `Input: $${model.inputPrice}/1K tokens, Output: $${model.outputPrice}/1K tokens`;
+      const priceText = model.price === 0 ? 'Free' :
+        `Input: $${model.inputPrice}/1K tokens, Output: $${model.outputPrice}/1K tokens`;
       option.textContent = `${model.name} (${model.type}) - ${priceText}`;
       DOMElements.modelSelect.appendChild(option);
     });
@@ -528,37 +534,19 @@ class ModelManager {
 class DomSelectManager {
   constructor() {
     this.active = false;
-    this.unloadHandler = this.deactivateOnUnload.bind(this);
   }
 
   toggle() {
-    this.active = !this.active;
+    this.setActive(!this.active)
+  }
+
+  setActive(active) {
+    this.active = active;
     DOMElements.activateSelectionBtn.innerHTML = this.active ? `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368"><path d="m500-120-56-56 142-142-142-142 56-56 142 142 142-142 56 56-142 142 142 142-56 56-142-142-142 142Zm-220 0v-80h80v80h-80Zm-80-640h-80q0-33 23.5-56.5T200-840v80Zm80 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80q33 0 56.5 23.5T840-760h-80ZM200-200v80q-33 0-56.5-23.5T120-200h80Zm-80-80v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm640 0v-80h80v80h-80Z"/></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368"><path d="M440-120v-400h400v80H576l264 264-56 56-264-264v264h-80Zm-160 0v-80h80v80h-80Zm-80-640h-80q0-33 23.5-56.5T200-840v80Zm80 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80q33 0 56.5 23.5T840-760h-80ZM200-200v80q-33 0-56.5-23.5T120-200h80Zm-80-80v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm640 0v-80h80v80h-80Z"/></svg>`;
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs.length === 0) return;
       chrome.tabs.sendMessage(tabs[0].id, { action: "toggleDomSelector", active: this.active });
     });
-    window.addEventListener('beforeunload', this.unloadHandler);
-  }
-
-  deactivateOnUnload() {
-    this.active = false;
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs.length === 0) return;
-      chrome.tabs.sendMessage(tabs[0].id, { action: "toggleDomSelector", active: this.active });
-    });
-  }
-
-  deactivateOnEscape() {
-    if (this.active) {
-      this.active = false;
-      DOMElements.activateSelectionBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368"><path d="M440-120v-400h400v80H576l264 264-56 56-264-264v264h-80Zm-160 0v-80h80v80h-80Zm-80-640h-80q0-33 23.5-56.5T200-840v80Zm80 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80q33 0 56.5 23.5T840-760h-80ZM200-200v80q-33 0-56.5-23.5T120-200h80Zm-80-80v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm640 0v-80h80v80h-80Z"/></svg>`;
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs.length === 0) return;
-        chrome.tabs.sendMessage(tabs[0].id, { action: "toggleDomSelector", active: this.active });
-      });
-      window.addEventListener('beforeunload', this.unloadHandler);
-    }
   }
 }
 
@@ -606,13 +594,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   const domSelectManager = new DomSelectManager();
-  DOMElements.activateSelectionBtn.addEventListener("click", domSelectManager.toggle.bind(domSelectManager));
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      domSelectManager.deactivateOnEscape();
+  chrome.storage.local.get("selectedHTML", function (data) {
+    if (data.selectedHTML) {
+      domSelectManager.setActive(true)
     }
   });
-  window.addEventListener('beforeunload', domSelectManager.unloadHandler);
+  DOMElements.activateSelectionBtn.addEventListener("click", domSelectManager.toggle.bind(domSelectManager));
+  // window.addEventListener('beforeunload', domSelectManager.unloadHandler);
 
   DOMElements.savePromptBtn.addEventListener("click", () => {
     const prompt = DOMElements.customPromptInput.value.trim();
@@ -661,10 +649,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Load initial chat history
   ChatManager.loadChatHistory();
 
-  chrome.storage.local.get("selectedHTML", function (data) {
-    document.getElementById("html-content").innerText = data.selectedHTML || "Click an element to see its HTML here.";
+  window.addEventListener("beforeunload", () => {
+    console.log("Cleaning up before unload...");
+    // Any necessary cleanup (e.g., remove event listeners)
   });
-});
-document.addEventListener("mousedown", (event) => {
-  event.stopPropagation(); // 팝업이 닫히지 않도록 이벤트 전파 차단
 });

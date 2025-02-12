@@ -17,15 +17,34 @@ class DomSelector {
         this.selectionActive = false;
         this.selectedElement = null;
         this.currentElement = null;
-        this.createFloatingPopup();
+        // this.createFloatingPopup();
+    }
+
+    reset() {
+        this.selectionActive = false;
+        this.clearBoundary(this.selectedElement);
+        this.selectedElement = null;
+        this.clearBoundary(this.currentElement);
+        this.currentElement = null;
+        chrome.runtime.sendMessage({ action: "click_target_dom", html: "" });
+        // // Hide popup if open
+        // if (this.popup) {
+        //     this.popup.style.display = "none";
+        // }
+    }
+
+    handleKeydown(event) {
+        if (event.key === "Escape") {
+            console.log("ESC Pressed: Closing selection mode");
+            this.reset()
+        }
     }
 
     handleToggleMessage(message, sender, sendResponse) {
         if (message.action === "toggleDomSelector") {
             this.selectionActive = message.active;
             if (!this.selectionActive) {
-                this.clearBoundary(this.selectedElement);
-                this.selectedElement = null;
+                this.reset();
             }
         }
     }
@@ -60,11 +79,8 @@ class DomSelector {
                 x: event.clientX + window.scrollX,
                 y: event.clientY + window.scrollY
             };
-            
-            console.log(position.x, position.y);
-            
-
-            this.showPopup(position, event.target.outerHTML);
+            chrome.runtime.sendMessage({action: "click_target_dom", html: event.target.outerHTML});
+            // this.showPopup(position, event.target.outerHTML);
         }
     }
 
@@ -112,18 +128,18 @@ class DomSelector {
     //     this.popup.style.top = `${position.y + 10}px`;
     //     this.popup.style.display = "block";
     // }
-    showPopup(position) {
-        fetch(chrome.runtime.getURL("popup.html"))
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById("popup-content").innerHTML = html;
-                this.popup.style.left = `${position.x + 10}px`;
-                this.popup.style.top = `${position.y + 10}px`;
-                this.popup.style.display = "block";
-            }).catch(e => {
-                debugger;
-            });
-    }
+    // showPopup(position) {
+    //     fetch(chrome.runtime.getURL("popup.html"))
+    //         .then(response => response.text())
+    //         .then(html => {
+    //             document.getElementById("popup-content").innerHTML = html;
+    //             this.popup.style.left = `${position.x + 10}px`;
+    //             this.popup.style.top = `${position.y + 10}px`;
+    //             this.popup.style.display = "block";
+    //         }).catch(e => {
+    //             debugger;
+    //         });
+    // }
 }
 
 const domSelector = new DomSelector();
@@ -132,3 +148,4 @@ chrome.runtime.onMessage.addListener(domSelector.handleToggleMessage.bind(domSel
 
 document.addEventListener("mouseover", domSelector.handleMouseOver.bind(domSelector));
 document.addEventListener("click", domSelector.handleClick.bind(domSelector));
+document.addEventListener("keydown", domSelector.handleKeydown.bind(domSelector));
