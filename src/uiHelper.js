@@ -8,7 +8,7 @@ export class UIHelper {
    */
   static createSVGButton(tag, id, svgHTML, onClickHandler = null) {
     const element = document.createElement(tag);
-    element.id = id;
+    if (id) element.id = id;
     element.classList.add("icon-btn");
     element.innerHTML = svgHTML;
     if (onClickHandler) element.addEventListener("click", onClickHandler);
@@ -20,10 +20,10 @@ export class UIHelper {
    * then shows a success animation.
    * @param {string} text - The text to copy.
    */
-  static createCopyButton(text) {
+  static createCopyButton(id, text) {
     const btn = UIHelper.createSVGButton(
       "button",
-      "copy-btn",
+      id,
       UIHelper.getCopyIcon(),
       async (e) => {
         btn.classList.add("button-clicked");

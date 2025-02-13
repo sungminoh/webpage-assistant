@@ -40,7 +40,7 @@ class DomSelectManager {
   }
 
   setupCopyHtmlButton() {
-    this.buttons.appendChild(UIHelper.createCopyButton(() => this.htmlBox?.innerHTML));
+    this.buttons.appendChild(UIHelper.createCopyButton("copyHtmlBtn", () => this.htmlBox?.innerHTML));
   }
 
   toggle() {

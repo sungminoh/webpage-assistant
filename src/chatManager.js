@@ -170,7 +170,7 @@ export class ChatManager {
         this.saveChatHistory();
       });
       // Create a copy button
-      const copyButton = UIHelper.createCopyButton(text);
+      const copyButton = UIHelper.createCopyButton(null, text);
       // Append buttons horizontally
       buttonContainer.appendChild(deleteButton);
       buttonContainer.appendChild(copyButton);
