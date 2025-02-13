@@ -6,8 +6,10 @@ class DomSelectManager {
   constructor(htmlBox) {
     this.htmlBox = htmlBox;
     this.htmlContainer = htmlBox?.parentElement;
+    this.buttons = this.htmlContainer.querySelector(".html-box-buttons")
     this.visible = false;
     this.insectScript();
+    this.setupCopyHtmlButton(); // Initialize copy button click event
   }
 
   insectScript() {
@@ -37,6 +39,10 @@ class DomSelectManager {
     });
   }
 
+  setupCopyHtmlButton() {
+    this.buttons.appendChild(UIHelper.createCopyButton(() => this.htmlBox?.innerHTML));
+  }
+
   toggle() {
     this.setActive(!this.visible);
     if (this.visible) {
@@ -59,7 +65,6 @@ class DomSelectManager {
       <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
         <path d="m500-120-56-56 142-142-142-142 56-56 142 142 142-142 56 56-142 142 142 142-56 56-142-142-142 142Zm-220 0v-80h80v80h-80Zm-80-640h-80q0-33 23.5-56.5T200-840v80Zm80 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80q33 0 56.5 23.5T840-760h-80ZM200-200v80q-33 0-56.5-23.5T120-200h80Zm-80-80v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm640 0v-80h80v80h-80Z"/>
       </svg>`;
-
     const deactivateIcon = `
       <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
         <path d="M440-120v-400h400v80H576l264 264-56 56-264-264v264h-80Zm-160 0v-80h80v80h-80Zm-80-640h-80q0-33 23.5-56.5T200-840v80Zm80 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80q33 0 56.5 23.5T840-760h-80ZM200-200v80q-33 0-56.5-23.5T120-200h80Zm-80-80v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm640 0v-80h80v80h-80Z"/>
@@ -91,13 +96,11 @@ class DomSelectManager {
   }
 
   async toggleVisibility(forceVisibility) {
-    // If a force parameter is provided, use it; otherwise, toggle the current state.
     if (forceVisibility === undefined || forceVisibility === null) {
       this.visible = !this.visible;
     } else {
       this.visible = forceVisibility;
     }
-  
     if (this.htmlContainer) {
       if (this.visible) {
         UIHelper.showElementWithFade(this.htmlContainer);

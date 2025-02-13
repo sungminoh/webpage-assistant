@@ -26,10 +26,11 @@ export class UIHelper {
       "copy-btn",
       UIHelper.getCopyIcon(),
       async (e) => {
-        // Add click animation
         btn.classList.add("button-clicked");
         try {
-          await navigator.clipboard.writeText(text);
+          // If text is a function, call it (await in case it's async); otherwise use text directly.
+          const textToCopy = typeof text === "function" ? await text() : text;
+          await navigator.clipboard.writeText(textToCopy);
           btn.innerHTML = UIHelper.getSuccessIcon();
           btn.classList.add("button-success");
         } catch (error) {
@@ -92,6 +93,28 @@ export class UIHelper {
     return btn;
   }
 
+  /**
+   * Creates a delete button with a simple deletion animation.
+   */
+  static createClearButton(onClick) {
+    const btn = UIHelper.createSVGButton(
+      "button",
+      "clear-btn",
+      UIHelper.getDeleteSweepIcon(),
+      (e) => {
+        onClick(e);
+        btn.classList.add("button-clicked", "button-delete");
+        // Caller should handle removal of the parent element.
+        setTimeout(() => {
+          btn.classList.remove("button-clicked", "button-delete");
+        }, 500);
+      }
+    );
+    return btn;
+  }
+
+
+
   /* ---- Icon Generators ---- */
   static getCopyIcon() {
     return `
@@ -124,6 +147,12 @@ export class UIHelper {
       </svg>
     `;
   }
+  static getDeleteSweepIcon() {
+    return `
+    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368"><path d="M600-240v-80h160v80H600Zm0-320v-80h280v80H600Zm0 160v-80h240v80H600ZM120-640H80v-80h160v-60h160v60h160v80h-40v360q0 33-23.5 56.5T440-200H200q-33 0-56.5-23.5T120-280v-360Zm80 0v360h240v-360H200Zm0 0v360-360Z"/></svg>
+    `;
+  }
+
 
   static getReloadIcon() {
     return `

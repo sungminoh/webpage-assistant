@@ -166,7 +166,7 @@ section {
 }
 
 /* Position the buttons at the bottom-left regardless of the html-box content */
-.html-container .html-content-buttons {
+.html-container .html-box-buttons {
   position: absolute;
   bottom: 6px;
   left: 6px;
