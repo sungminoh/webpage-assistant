@@ -41,49 +41,96 @@ Your responses must be precise, structured, and context-aware. Use maximum infer
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "ask_ai") {
-    chrome.storage.sync.get(["openaiApiKey", "anthropicApiKey", "basePrompt"], async (data) => {
-      const modelType = request.model.type;
-      if ((modelType === "openai" && !data.openaiApiKey) ||
-        (modelType === "anthropic" && !data.anthropicApiKey)) {
-        console.error("API Key is missing.");
-        chrome.runtime.sendMessage({ action: "response_result", summary: "Error: API Key not set." });
-        return;
-      }
+    handleAiRequest(request);
+  }
+});
 
-      chrome.storage.local.get(["chatHistory"], async (historyData) => {
-        let chatHistory = historyData.chatHistory || [];
-        let historyText = chatHistory.map(entry => `${entry.sender}: ${entry.text}`).join("\n");
-        const prompt = `
+/**
+ * Handles AI request by fetching necessary data and making API calls.
+ */
+async function handleAiRequest(request) {
+  try {
+    const { openaiApiKey, anthropicApiKey, basePrompt } = await getApiKeys();
+    const modelType = request.model.type;
+
+    if ((modelType === "openai" && !openaiApiKey) || (modelType === "anthropic" && !anthropicApiKey)) {
+      return handleError("API Key is missing.");
+    }
+
+    const chatHistory = await getChatHistory();
+    const prompt = generatePrompt(request, basePrompt, chatHistory);
+
+    console.log(prompt);
+
+    const summary = await callModelApi(modelType, request.model.name, openaiApiKey, anthropicApiKey, prompt);
+    
+    chrome.runtime.sendMessage({ action: "response_result", summary });
+  } catch (error) {
+    handleError("Error: Failed to fetch summary.", error);
+  }
+}
+
+/**
+ * Retrieves API keys and base prompt from storage.
+ */
+function getApiKeys() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get(["openaiApiKey", "anthropicApiKey", "basePrompt"], (data) => {
+      resolve(data);
+    });
+  });
+}
+
+/**
+ * Retrieves chat history from local storage.
+ */
+function getChatHistory() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["chatHistory"], (data) => {
+      resolve(data.chatHistory || []);
+      // const chatHistory = data.chatHistory || [];
+      // resolve(chatHistory.map(entry => `${entry.sender}: ${entry.text}`).join("\n"));
+    });
+  });
+}
+
+/**
+ * Generates the final prompt for the AI model.
+ */
+function generatePrompt(request, basePrompt, historyText) {
+  return `
 ### **Compressed HTML Representation:**
 ${request.content}
 
 ### **Custom Instructions:**
-${request.basePrompt}
+${basePrompt}
 
 ### **Conversation History:**
 ${historyText}
 
 Answer to the user's latest message.
-`.trim();
-        console.log(prompt)
-        try {
-          let summary;
-          if (modelType === "openai") {
-            // Call OpenAI API with streaming enabled.
-            summary = await callOpenAI(data.openaiApiKey, request.model.name, SYSTEM_PROMPT, prompt, true);
-          } else if (modelType === "anthropic") {
-            summary = await callAnthropic(data.anthropicApiKey, request.model.name, SYSTEM_PROMPT, prompt);
-          }
-          // When the stream is finished, send a final message with the full response.
-          chrome.runtime.sendMessage({ action: "response_result", summary });
-        } catch (error) {
-          console.error("Error calling API:", error);
-          chrome.runtime.sendMessage({ action: "summary_result", summary: "Error: Failed to fetch summary." });
-        }
-      });
-    });
+  `.trim();
+}
+
+/**
+ * Calls the appropriate AI model based on the model type.
+ */
+async function callModelApi(modelType, modelName, openaiKey, anthropicKey, prompt) {
+  if (modelType === "openai") {
+    return await callOpenAI(openaiKey, modelName, SYSTEM_PROMPT, prompt, true);
+  } else if (modelType === "anthropic") {
+    return await callAnthropic(anthropicKey, modelName, SYSTEM_PROMPT, prompt);
   }
-});
+  throw new Error("Invalid model type.");
+}
+
+/**
+ * Handles errors by logging and sending an error message.
+ */
+function handleError(message, error = null) {
+  console.error(message, error || "");
+  chrome.runtime.sendMessage({ action: "response_result", summary: message });
+}
 
 class AiResponse {
   constructor(content, inputTokens, outputTokens) {
