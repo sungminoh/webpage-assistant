@@ -10,6 +10,24 @@ function getCssText(element) {
   return cssText;
 }
 
+
+function applyTheme() {
+  chrome.storage.sync.get(["openaiApiKey", "anthropicApiKey", "basePrompt", "theme"], (data) => {
+    const theme = data.theme || "light";
+    document.documentElement.setAttribute("data-theme", theme);
+  });
+}
+
+// 페이지가 로드될 때 테마 적용
+applyTheme();
+
+// 테마 변경 감지 및 적용
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.theme) {
+    applyTheme();
+  }
+});
+
 class DomSelector {
   constructor() {
     this.selectionActive = false;

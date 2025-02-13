@@ -1,15 +1,64 @@
-/* content/content.css */
-
-/* 선택된 요소 강조 (DOM 선택 시) */
+/* 기본 테마 (Light) */
 [data-selected="true"] {
-  outline: 3px solid rgba(255, 69, 0, 0.8);
-  background-color: rgba(255, 99, 71, 0.4);
-  box-shadow: 0 0 8px rgba(255, 69, 0, 0.6);
+  outline: 3px solid var(--fifth-color);
+  background-color: rgba(220, 53, 69, 0.2); /* Red Accent */
+  box-shadow: 0 0 8px rgba(220, 53, 69, 0.5);
 }
 
-/* 마우스 호버된 요소 강조 */
 [data-hovered="true"] {
-  outline: 2px dashed rgba(70, 130, 180, 0.7);
-  background-color: rgba(173, 216, 230, 0.4);
-  box-shadow: 0 0 6px rgba(70, 130, 180, 0.5);
+  outline: 2px dashed var(--primary-color);
+  background-color: var(--primary-color-alpha2);
+  box-shadow: 0 0 6px rgba(0, 123, 255, 0.4);
+}
+
+/* 🌙 다크 테마 */
+[data-theme="dark"] [data-selected="true"] {
+  outline: 3px solid var(--secondary-color);
+  background-color: rgba(224, 108, 117, 0.3); /* Muted Red */
+  box-shadow: 0 0 10px rgba(224, 108, 117, 0.6);
+}
+
+[data-theme="dark"] [data-hovered="true"] {
+  outline: 2px dashed var(--primary-color);
+  background-color: rgba(97, 175, 239, 0.2);
+  box-shadow: 0 0 6px rgba(97, 175, 239, 0.5);
+}
+
+/* 🎨 파스텔 테마 */
+[data-theme="pastel"] [data-selected="true"] {
+  outline: 3px solid var(--fifth-color);
+  background-color: rgba(144, 19, 254, 0.2); /* Soft Purple */
+  box-shadow: 0 0 8px rgba(144, 19, 254, 0.5);
+}
+
+[data-theme="pastel"] [data-hovered="true"] {
+  outline: 2px dashed var(--secondary-color);
+  background-color: rgba(245, 166, 35, 0.2); /* Soft Orange */
+  box-shadow: 0 0 6px rgba(245, 166, 35, 0.4);
+}
+
+/* ⚡ 네온 테마 */
+[data-theme="neon"] [data-selected="true"] {
+  outline: 3px solid var(--third-color);
+  background-color: rgba(15, 240, 252, 0.2); /* Neon Cyan */
+  box-shadow: 0 0 12px rgba(15, 240, 252, 0.8);
+}
+
+[data-theme="neon"] [data-hovered="true"] {
+  outline: 2px dashed var(--fourth-color);
+  background-color: rgba(255, 251, 0, 0.2); /* Neon Yellow */
+  box-shadow: 0 0 10px rgba(255, 251, 0, 0.6);
+}
+
+/* 🔳 고대비 테마 */
+[data-theme="contrast"] [data-selected="true"] {
+  outline: 3px solid var(--primary-color);
+  background-color: rgba(255, 234, 0, 0.3); /* Bright Yellow */
+  box-shadow: 0 0 12px rgba(255, 234, 0, 0.7);
+}
+
+[data-theme="contrast"] [data-hovered="true"] {
+  outline: 2px dashed var(--secondary-color);
+  background-color: rgba(0, 255, 0, 0.2); /* Bright Green */
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
 }
