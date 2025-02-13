@@ -13,10 +13,12 @@ class PromptManager {
       const li = document.createElement("li");
       li.draggable = true;
       li.dataset.index = index;
-      
+
       const dragHandle = UIHelper.createDragHandle();
-      const promptText = UIHelper.createPromptText(prompt);
-      const closeBtn = UIHelper.createCloseButton(async () => await this.cloasePrompt(index));
+      const promptText = PromptManager.createPromptText(prompt);
+      const closeBtn = PromptManager.createCloseButton(async () => {
+        await PromptManager.closePrompt(index);
+      });
 
       li.append(dragHandle, promptText, closeBtn);
       promptList.appendChild(li);
@@ -32,7 +34,7 @@ class PromptManager {
     promptList.querySelectorAll("li").forEach((li, index) => {
       li.addEventListener("click", (event) => {
         // Prevent prompt submission when close button is clicked
-        if (event.target.closest(".close-btn")) return;
+        if (event.target.closest("#close-btn")) return;
         const customPromptInput = document.getElementById("customPrompt");
         if (customPromptInput) customPromptInput.value = prompts[index];
         // Submit the prompt when clicked
@@ -69,7 +71,7 @@ class PromptManager {
     this.renderList(savedPrompts);
   }
 
-  static async cloasePrompt(index) {
+  static async closePrompt(index) {
     const promptItems = document.querySelectorAll("#promptList li");
     if (promptItems[index]) {
       promptItems[index].classList.add("fade-out");
@@ -80,6 +82,27 @@ class PromptManager {
         this.renderList(savedPrompts);
       }, 300);
     }
+  }
+
+  static createPromptText(text) {
+    const element = document.createElement("div");
+    element.className = "prompt-text";
+    element.textContent = text;
+    return element;
+  }
+
+  static createCloseButton(onClick) {
+    return UIHelper.createSVGButton(
+      "div",
+      "close-btn",
+      `
+      <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#5f6368"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
+      `,
+      (event) => {
+        event.stopPropagation();
+        onClick();
+      }
+    );
   }
 }
 
