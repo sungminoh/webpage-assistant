@@ -2,11 +2,18 @@
 import { StorageHelper } from "./storageHelper.js";
 
 class DomSelectManager {
-  constructor() {
+  constructor(htmlBox) {
+    this.htmlBox = htmlBox;
+    this.htmlContainer = htmlBox?.parentElement;
+    this.visible = false;
+    this.insectScript();
+  }
+
+  insectScript() {
     chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
       if (tabs.length === 0) return; // No active tab found.
       // Check if DomSelector already exists in the tab
-      const tab = tabs[0]
+      const tab = tabs[0];
       const [result] = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: () => typeof window.DomSelector !== "undefined",
@@ -27,16 +34,19 @@ class DomSelectManager {
         });
       }
     });
-    this.active = false;
   }
 
   toggle() {
-    this.setActive(!this.active);
+    this.setActive(!this.visible);
+    if (this.visible) {
+      window.close();
+    }
   }
 
   async setActive(active) {
-    this.active = active;
+    this.visible = active;
     this.updateButtonState();
+    await this.toggleVisibility(active);
     if (!active) {
       await this.clearSelectedHTML();
     }
@@ -56,16 +66,15 @@ class DomSelectManager {
 
     const btn = document.getElementById("activateSelectionBtn");
     if (btn) {
-      btn.innerHTML = this.active ? activateIcon : deactivateIcon;
-      btn.classList.toggle("highlight", this.active);
+      btn.innerHTML = this.visible ? activateIcon : deactivateIcon;
+      btn.classList.toggle("highlight", this.visible);
     }
   }
 
   async clearSelectedHTML() {
     await StorageHelper.remove(["selectedHTML", "selectedCSS"], "local");
-    const htmlContent = document.getElementById("html-content");
-    if (htmlContent) {
-      htmlContent.innerHTML = "";
+    if (this.htmlBox) {
+      this.htmlBox.innerHTML = "";
     }
     console.debug("Selected HTML cleared.");
   }
@@ -75,8 +84,41 @@ class DomSelectManager {
       if (tabs.length === 0) return;
       chrome.tabs.sendMessage(tabs[0].id, {
         action: "toggleDomSelector",
-        active: this.active
+        active: this.visible
       });
+    });
+  }
+
+  async toggleVisibility(forceVisibility) {
+    // If a force parameter is provided, use it; otherwise, toggle the current state.
+    if (forceVisibility === undefined || forceVisibility === null) {
+      this.visible = !this.visible;
+    } else {
+      this.visible = forceVisibility;
+    }
+  
+    if (this.htmlContainer) {
+      if (this.visible) {
+        this.htmlContainer.classList.remove("hidden");
+        this.htmlContainer.classList.add("visible");
+      } else {
+        this.htmlContainer.classList.remove("visible");
+        this.htmlContainer.classList.add("hidden");
+      }
+    }
+  }
+
+  render() {
+    StorageHelper.get(["selectedHTML", "selectedCSS"], "local").then(({ selectedHTML, selectedCSS }) => {
+      if (selectedHTML?.trim()) {
+        if (this.htmlBox) {
+          this.htmlBox.innerHTML = selectedHTML;
+          if (selectedCSS?.trim()) {
+            this.htmlBox.style.cssText = selectedCSS;
+          }
+        }
+        this.setActive(true);
+      }
     });
   }
 }

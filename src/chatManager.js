@@ -12,7 +12,19 @@ export class ChatManager {
       throw new Error("ChatManager requires a valid chatBox element.");
     }
     this.chatBox = chatBox;
+    this.chatContainer = chatBox.parentElement;
+    this.visible = false;
     this.currentAiMessage = null; // To keep track of the ongoing AI response
+  }
+
+  toggleVisibility(forceVisibility) {
+    if (forceVisibility === undefined || forceVisibility === null) {
+      this.visible = !this.visible;
+    } else {
+      this.visible = forceVisibility;
+    }
+    this.chatContainer.classList.toggle("visible", this.visible);
+    this.chatContainer.classList.toggle("hidden", !this.visible);
   }
 
   scrollToBottom(alwaysScroll = false) {
@@ -90,6 +102,7 @@ export class ChatManager {
    *        options.updateCurrent: if true, update currentAiMessage instead of creating a new one.
    */
   addMessage(sender, text, usageInfo = null, options = {}) {
+    this.toggleVisibility(true);
     // If sender is AI and updateCurrent is true and we already have an ongoing AI message,
     // update that instead of appending a new one.
     let li;
@@ -109,10 +122,6 @@ export class ChatManager {
       }
     } else {
       // Otherwise, create a new message element.
-      if (!this.chatBox.classList.contains("visible")) {
-        this.chatBox.classList.add("visible");
-      }
-
       li = document.createElement("li");
       li.classList.add(sender === "AI" ? "ai-message" : "user-message");
 

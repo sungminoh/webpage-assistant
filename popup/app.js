@@ -9,6 +9,7 @@ import { DomSelectManager } from "../src/domSelectManager.js";
 // DOM 요소들을 한 곳에서 관리
 const DOMElements = {
   chatBox: document.getElementById("chat"),
+  htmlBox: document.getElementById("html-box"),
   modelSelect: document.getElementById("modelSelect"),
   customPromptInput: document.getElementById("customPrompt"),
   savePromptBtn: document.getElementById("savePromptBtn"),
@@ -112,11 +113,10 @@ function savePrompt() {
  * 채팅 삭제 처리 함수
  */
 function clearChat() {
-  DOMElements.chatBox.classList.add("fade-out");
+  chatManager.toggleVisibility(false);
   setTimeout(() => {
     StorageHelper.remove(["chatHistory", "chatScrollPosition"], "local").then(() => {
-      DOMElements.chatBox.innerHTML = "";
-      DOMElements.chatBox.classList.remove("fade-out", "visible");
+      chatManager.chatBox.innerHTML = "";
     });
   }, 300);
 }
@@ -145,18 +145,8 @@ function handleIncomingMessages(message) {
  */
 function initializeDomSelector() {
   console.debug("initializeDomSelector")
-  domSelectManager = new DomSelectManager();
-  StorageHelper.get(["selectedHTML", "selectedCSS"], "local").then(({ selectedHTML, selectedCSS }) => {
-    if (selectedHTML?.trim()) {
-      domSelectManager.setActive(true);
-      const element = document.getElementById("html-content");
-      console.log(element)
-      element.innerHTML = selectedHTML;
-      if (selectedCSS?.trim()) {
-        element.style.cssText = selectedCSS;
-      }
-    }
-  });
+  domSelectManager = new DomSelectManager(DOMElements.htmlBox);
+  domSelectManager.render();
   DOMElements.activateSelectionBtn.addEventListener("click", domSelectManager.toggle.bind(domSelectManager));
 }
 
@@ -177,16 +167,16 @@ function applyTheme() {
     }
   });
 
-  // HTML에 테마 토글 버튼이 있다고 가정 (예: id="themeToggleBtn")
-  const themeToggleButton = document.getElementById("themeToggleBtn");
-  if (themeToggleButton) {
-    themeToggleButton.addEventListener("click", () => {
-      const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
-      const newTheme = currentTheme === "light" ? "dark" : "light";
-      document.documentElement.setAttribute("data-theme", newTheme);
-      chrome.storage.sync.set({ theme: newTheme });
-    });
-  }
+  // // HTML에 테마 토글 버튼이 있다고 가정 (예: id="themeToggleBtn")
+  // const themeToggleButton = document.getElementById("themeToggleBtn");
+  // if (themeToggleButton) {
+  //   themeToggleButton.addEventListener("click", () => {
+  //     const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+  //     const newTheme = currentTheme === "light" ? "dark" : "light";
+  //     document.documentElement.setAttribute("data-theme", newTheme);
+  //     chrome.storage.sync.set({ theme: newTheme });
+  //   });
+  // }
 };
 
 

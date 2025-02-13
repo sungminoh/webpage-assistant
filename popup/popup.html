@@ -9,12 +9,19 @@
 <body>
   <div class="container">
     <!-- HTML Preview Area (Markdown rendered) -->
-    <section class="html-container">
-      <div id="html-content"></div>
+    <section class="html-container hidden">
+      <div id="html-box" class="html-box html-content"></div>
+      <div class="html-content-buttons">
+        <button id="copyHtmlBtn" class="icon-btn" aria-label="Copy HTML">
+          <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#5f6368">
+            <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/>
+          </svg>
+        </button>
+      </div>
     </section>
 
     <!-- Chat Area -->
-    <section class="chat-container">
+    <section class="chat-container hidden">
       <ul id="chat" class="chat-box">
         <!-- Chat messages will be appended here by chatManager -->
       </ul>
@@ -28,7 +35,7 @@
     </section>
 
     <!-- Input Area -->
-    <section class="input-container">
+    <section class="input-container visible">
       <div class="top-bar">
         <!-- Left controls -->
         <div class="left-controls">
@@ -44,7 +51,6 @@
         <!-- Model selector container centered in top-bar -->
         <div class="model-container">
           <select id="modelSelect" aria-label="Select Model">
-            <!-- Options will be populated via JS -->
             <option value="model1">Model 1: Default Long Name Example</option>
             <option value="model2">Model 2</option>
             <option value="model3">Model 3</option>

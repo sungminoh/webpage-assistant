@@ -138,9 +138,27 @@ body {
   border-radius: 4px;
 }
 
+section {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 6px;
+  background-color: var(--container-bg);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  box-sizing: border-box;
+}
+
 /* ===== HTML Preview Area (Markdown Rendering) ===== */
 /* HTML Preview Area */
 .html-container {
+  font-family: var(--code-font);
+  color: var(--text-color);
+  padding: 8px;            /* Reduced padding */
+  margin-bottom: 8px;
+  overflow-y: auto;
+  max-height: 200px;       /* Slightly lower max height */
+}
+
+.html-box{
   font-family: var(--code-font);
   background-color: var(--container-bg);
   color: var(--text-color);
@@ -153,9 +171,9 @@ body {
 }
 
 /* Headings: reduce spacing */
-.html-container h1,
-.html-container h2,
-.html-container h3 {
+.html-content h1,
+.html-content h2,
+.html-content h3 {
   color: var(--primary-color);
   margin-top: 0.5em;       /* Tighter top margin */
   margin-bottom: 0.2em;    /* Tighter bottom margin */
@@ -163,14 +181,14 @@ body {
 }
 
 /* Paragraphs: tighter spacing and smaller font */
-.html-container p {
+.html-content p {
   font-size: 13px;         /* Slightly smaller text */
   line-height: 1.2;        /* Reduced line height */
   margin-bottom: 0.6em;    /* Less vertical spacing between paragraphs */
 }
 
 /* Inline code: reduce padding */
-.html-container code {
+.html-content code {
   background-color: var(--code-bg);
   padding: 1px 2px;        /* Tighter padding */
   border-radius: 3px;
@@ -179,7 +197,7 @@ body {
 }
 
 /* Code blocks: reduced padding and margin */
-.html-container pre {
+.html-content pre {
   background-color: var(--code-bg);
   padding: 4px;            /* Reduced padding */
   border-radius: 4px;
@@ -190,7 +208,7 @@ body {
 }
 
 /* Blockquotes: tighter margins and padding */
-.html-container blockquote {
+.html-content blockquote {
   border-left: 4px solid var(--primary-color);
   padding-left: 8px;       /* Reduced padding */
   color: var(--secondary-text-color);
@@ -199,8 +217,8 @@ body {
 }
 
 /* Lists: reduce default list margins */
-.html-container ul,
-.html-container ol {
+.html-content ul,
+.html-content ol {
   margin: 0.5em 0;         /* Tighter spacing */
   padding-left: 1em;       /* Ensure proper indentation */
 }
@@ -214,19 +232,45 @@ body {
 .chat-box {
   max-height: 400px;
   overflow-y: auto;
-  border: 1px solid var(--border-color);
-  border-radius: 4px 4px 0 0;
   padding: 8px;
-  background-color: var(--container-bg);
-  display: none;
 }
 
-.chat-box.visible {
+.chat-container.visible {
   display: block;
 }
 
+.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--fade-duration) ease, visibility var(--fade-duration) ease;
+}
+
+.visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--fade-duration) ease, visibility var(--fade-duration) ease;
+}
+
 /* Global chat control buttons (if needed) */
-.chat-box-buttons {
+.floating-buttons {
+  position: absolute;
+  padding: 2px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity var(--fade-duration) ease;
+  z-index: 9999;
+}
+
+/* Chat box button positioning */
+.chat-box-buttons,
+.html-box-buttons {
+  @extend .floating-buttons;
+  bottom: 6px;
+  left: 6px;
+}
+
+.chat-box-buttons,
+.html-box-buttons {
   position: absolute;
   bottom: 6px;
   left: 6px;
@@ -236,14 +280,22 @@ body {
   transition: opacity var(--fade-duration) ease;
 }
 
-.chat-container:hover .chat-box-buttons {
+.chat-container:hover .chat-box-buttons,
+.html-container:hover .html-box-buttons {
   opacity: 1;
 }
 
+.fade-in {
+  animation: fadeIn var(--fade-duration) ease forwards;
+}
 .fade-out {
   animation: fadeOut var(--fade-duration) ease forwards;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 @keyframes fadeOut {
   from { opacity: 1; }
   to { opacity: 0; }
