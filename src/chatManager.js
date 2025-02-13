@@ -13,8 +13,24 @@ export class ChatManager {
     }
     this.chatBox = chatBox;
     this.chatContainer = chatBox.parentElement;
+    this.buttons = this.chatContainer.querySelector(".chat-box-buttons")
     this.visible = false;
     this.currentAiMessage = null; // To keep track of the ongoing AI response
+  }
+
+  init() {
+    this.loadChatHistory();
+    this.buttons.appendChild(UIHelper.createClearButton(this.clearChat.bind(this)));  
+    // this.chatContainer.appendChild(UIHelper.createClearButton(alert));  
+  }
+
+  clearChat() {
+    this.toggleVisibility(false);
+    setTimeout(() => {
+      StorageHelper.remove(["chatHistory", "chatScrollPosition"], "local").then(() => {
+        chatManager.chatBox.innerHTML = "";
+      });
+    }, 300);
   }
 
   toggleVisibility(forceVisibility) {

@@ -267,6 +267,13 @@ section {
   transition: opacity var(--fade-duration) ease, visibility var(--fade-duration) ease;
 }
 
+.highlight svg {
+  fill: var(--primary-color);
+}
+
+
+
+
 /* Global chat control buttons (if needed) */
 .floating-buttons {
   position: absolute;
@@ -494,6 +501,24 @@ textarea {
 
 .icon-btn:active {
   transform: scale(0.95);
+}
+
+/* When a button is clicked, slightly enlarge it */
+.icon-btn.button-clicked {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+/* On success, change the SVG fill to the third accent color */
+.icon-btn.button-success svg {
+  fill: var(--third-color);
+  transition: fill 0.2s ease;
+}
+
+/* On error, change the SVG fill to the fifth accent color */
+.icon-btn.button-error svg {
+  fill: var(--fifth-color);
+  transition: fill 0.2s ease;
 }
 
 /* ===== Prompt Buttons (Right-aligned) ===== */

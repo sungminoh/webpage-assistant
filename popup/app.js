@@ -15,7 +15,6 @@ const DOMElements = {
   savePromptBtn: document.getElementById("savePromptBtn"),
   submitPromptBtn: document.getElementById("submitPromptBtn"),
   promptList: document.getElementById("promptList"),
-  clearChatBtn: document.getElementById("clearChatBtn"),
   activateSelectionBtn: document.getElementById("activateSelectionBtn"),
   settingsBtn: document.getElementById("settingsBtn")
 };
@@ -63,8 +62,6 @@ function setupEventListeners() {
   // 프롬프트 전송 버튼 클릭
   DOMElements.submitPromptBtn.addEventListener("click", submitPrompt);
 
-  // 채팅 삭제 버튼 클릭
-  DOMElements.clearChatBtn.addEventListener("click", clearChat);
 
   // 채팅 박스 스크롤 시 현재 위치 저장
   DOMElements.chatBox.addEventListener("scroll", chatManager.saveScrollPosition.bind(chatManager));
@@ -109,17 +106,6 @@ function savePrompt() {
   });
 }
 
-/**
- * 채팅 삭제 처리 함수
- */
-function clearChat() {
-  chatManager.toggleVisibility(false);
-  setTimeout(() => {
-    StorageHelper.remove(["chatHistory", "chatScrollPosition"], "local").then(() => {
-      chatManager.chatBox.innerHTML = "";
-    });
-  }, 300);
-}
 
 /**
  * 백그라운드에서 전달된 메시지 처리 함수
@@ -201,7 +187,7 @@ async function initializeApp() {
   initializeDomSelector();
 
   // 6. 채팅 기록 로드 (저장된 대화 내역 복원)
-  chatManager.loadChatHistory();
+  chatManager.init();
 }
 
 // DOMContentLoaded 이벤트 발생 시 앱 초기화
