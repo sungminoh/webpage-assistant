@@ -23,8 +23,11 @@ export class ChatManager {
     } else {
       this.visible = forceVisibility;
     }
-    this.chatContainer.classList.toggle("visible", this.visible);
-    this.chatContainer.classList.toggle("hidden", !this.visible);
+    if (this.visible) {
+      UIHelper.showElementWithFade(this.chatContainer);
+    } else {
+      UIHelper.hideElementWithFade(this.chatContainer);
+    }
   }
 
   scrollToBottom(alwaysScroll = false) {

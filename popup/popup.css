@@ -155,6 +155,7 @@ section {
 /* ===== HTML Preview Area (Markdown Rendering) ===== */
 /* HTML Preview Area */
 .html-container {
+  display: none;
   position: relative; /* Establishes a containing block for absolute positioning */
   font-family: var(--code-font);
   color: var(--text-color);
@@ -244,6 +245,7 @@ section {
 .chat-container {
   position: relative;
   margin-bottom: 10px;
+  display: none;
 }
 
 .chat-box {
@@ -252,9 +254,6 @@ section {
   padding: 8px;
 }
 
-.chat-container.visible {
-  display: block;
-}
 
 .hidden {
   opacity: 0;

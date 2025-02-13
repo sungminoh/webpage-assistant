@@ -132,4 +132,27 @@ export class UIHelper {
       </svg>
     `;
   }
+
+  static hideElementWithFade(element) {
+    element.classList.remove("visible");
+    element.classList.add("hidden");
+  
+    // Wait for the transition to complete
+    element.addEventListener("transitionend", function handler(e) {
+      // Make sure we handle the opacity transition (or use a flag)
+      if (e.propertyName === "opacity") {
+        element.style.display = "none";
+        element.removeEventListener("transitionend", handler);
+      }
+    });
+  }
+  
+  static showElementWithFade(element) {
+    // Ensure the element takes up space before fading in
+    element.style.display = "block";
+    // Trigger reflow to make sure the change in display is applied
+    void element.offsetWidth;
+    element.classList.remove("hidden");
+    element.classList.add("visible");
+  }
 }

@@ -1,5 +1,6 @@
 // src/domSelectManager.js
 import { StorageHelper } from "./storageHelper.js";
+import { UIHelper } from "./uiHelper.js";
 
 class DomSelectManager {
   constructor(htmlBox) {
@@ -99,11 +100,9 @@ class DomSelectManager {
   
     if (this.htmlContainer) {
       if (this.visible) {
-        this.htmlContainer.classList.remove("hidden");
-        this.htmlContainer.classList.add("visible");
+        UIHelper.showElementWithFade(this.htmlContainer);
       } else {
-        this.htmlContainer.classList.remove("visible");
-        this.htmlContainer.classList.add("hidden");
+        UIHelper.hideElementWithFade(this.htmlContainer);
       }
     }
   }
