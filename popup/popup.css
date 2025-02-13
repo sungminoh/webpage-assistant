@@ -170,13 +170,14 @@ section {
   position: absolute;
   bottom: 6px;
   left: 6px;
-  z-index: 10; /* Ensure it sits above content if necessary */
+  z-index: 1000; /* Ensure it sits above content if necessary */
   background-color: var(--primary-color-alpha2);
   border-radius: 50%;
   padding: 6px;
 }
 
 .html-box{
+  position: relative;
   font-family: var(--code-font);
   background-color: var(--container-bg);
   color: var(--text-color);
@@ -188,57 +189,58 @@ section {
   max-height: 200px;       /* Slightly lower max height */
 }
 
-/* Headings: reduce spacing */
+/* Compact HTML Content Styling */
+/* Ultra Compact HTML Content Styling */
+.html-content * {
+  all: revert;
+  font-size: 12px;
+  line-height: 1.2;
+  margin: 0px;
+}
+
 .html-content h1,
 .html-content h2,
 .html-content h3 {
   color: var(--primary-color);
-  margin-top: 0.5em;       /* Tighter top margin */
-  margin-bottom: 0.2em;    /* Tighter bottom margin */
-  font-weight: 600;        /* Ensure readability */
+  /* margin: 0.3em 0; */
+  font-weight: 600;
 }
 
-/* Paragraphs: tighter spacing and smaller font */
 .html-content p {
-  font-size: 13px;         /* Slightly smaller text */
-  line-height: 1.2;        /* Reduced line height */
-  margin-bottom: 0.6em;    /* Less vertical spacing between paragraphs */
+  font-size: 12px;
+  /* margin: 0.2em 0; 더 타이트한 간격 */
 }
 
-/* Inline code: reduce padding */
 .html-content code {
   background-color: var(--code-bg);
-  padding: 1px 2px;        /* Tighter padding */
-  border-radius: 3px;
+  padding: 1px 2px;
+  border-radius: 2px;
   font-family: var(--code-font);
-  font-size: 13px;         /* Match paragraph size */
+  font-size: 12px;
 }
 
-/* Code blocks: reduced padding and margin */
 .html-content pre {
   background-color: var(--code-bg);
-  padding: 4px;            /* Reduced padding */
-  border-radius: 4px;
+  padding: 2px;
+  border-radius: 2px;
   overflow-x: auto;
   font-family: var(--code-font);
-  font-size: 13px;
-  margin: 0.5em 0;         /* Tighter vertical margin */
+  font-size: 12px;
+  /* margin: 0.3em 0; 줄 간격 최소화 */
 }
 
-/* Blockquotes: tighter margins and padding */
 .html-content blockquote {
-  border-left: 4px solid var(--primary-color);
-  padding-left: 8px;       /* Reduced padding */
+  border-left: 2px solid var(--primary-color);
+  padding-left: 2px;
   color: var(--secondary-text-color);
-  margin: 0.5em 0;         /* Tighter margins */
+  /* margin: 0.2em 0; */
   font-style: italic;
 }
 
-/* Lists: reduce default list margins */
 .html-content ul,
 .html-content ol {
-  margin: 0.5em 0;         /* Tighter spacing */
-  padding-left: 1em;       /* Ensure proper indentation */
+  /* margin: 0.2em 0; */
+  padding-left: 0.2em; /* 리스트 들여쓰기 최소화 */
 }
 
 /* ===== 채팅 영역 ===== */
@@ -325,17 +327,17 @@ section {
 }
 
 /* Chat message styling */
-.chat-box li {
+.chat-box > li {
   list-style: none;
   margin-bottom: 8px;
-  padding: 6px;
+  padding: 12px;
   border-radius: 4px;
   transition: background-color 0.3s ease, transform 0.2s ease;
   position: relative;
 }
 
 /* Button container inside each chat message */
-.chat-box li .button-container {
+.chat-box > li .button-container {
   display: flex;
   flex-direction: row;
   gap: 4px;
@@ -346,7 +348,7 @@ section {
   transition: opacity var(--fade-duration) ease;
 }
 
-.chat-box li:hover .button-container {
+.chat-box > li:hover .button-container {
   opacity: 1;
 }
 
@@ -367,6 +369,7 @@ section {
 .message-text {
   word-wrap: break-word;
   white-space: pre-wrap;
+  padding: 6px;
 }
 
 .placeholder {
