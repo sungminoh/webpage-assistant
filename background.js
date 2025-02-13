@@ -87,9 +87,8 @@ function getApiKeys() {
 function getChatHistory() {
   return new Promise((resolve) => {
     chrome.storage.local.get(["chatHistory"], (data) => {
-      resolve(data.chatHistory || []);
-      // const chatHistory = data.chatHistory || [];
-      // resolve(chatHistory.map(entry => `${entry.sender}: ${entry.text}`).join("\n"));
+      const chatHistory = data.chatHistory || [];
+      resolve(chatHistory.map(entry => `${entry.sender}: ${entry.text}`).join("\n"));
     });
   });
 }
