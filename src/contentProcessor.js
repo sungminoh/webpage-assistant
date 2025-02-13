@@ -18,8 +18,6 @@ class ContentProcessor {
     chatManager.saveChatHistory();
     chatManager.showPlaceholder();
 
-    const { selectedHTML } = await StorageHelper.get("selectedHTML");
-
     function processPageContent(prompt, model, selectedHtml) {
       function cleanDom(dom) {
         const cleaned = dom.cloneNode(true);
@@ -85,6 +83,8 @@ class ContentProcessor {
 
       chrome.runtime.sendMessage({ action: "ask_ai", content, model, prompt });
     }
+
+    const { selectedHTML } = await StorageHelper.get("selectedHTML");
 
     if (selectedHTML) {
       processPageContent(prompt, selectedModel, selectedHTML);
