@@ -26,7 +26,7 @@ class DomSelector {
     this.selectedElement = null;
     this.clearBoundary(this.currentElement);
     this.currentElement = null;
-    chrome.runtime.sendMessage({ action: "click_target_dom", html: undefined });
+    chrome.runtime.sendMessage({ action: "click_target_dom", html: undefined, css: undefined });
     this.overlay.style.display = "none";
     this.escMenu.style.display = "none";
   }
