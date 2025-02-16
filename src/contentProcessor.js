@@ -103,6 +103,7 @@ class ContentProcessor {
   static async validateApiKey(model) {
     const keyMap = {
       openai: "openaiApiKey",
+      gemini: "geminiApiKey",
       anthropic: "anthropicApiKey"
     };
 

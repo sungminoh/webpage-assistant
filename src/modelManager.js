@@ -34,6 +34,7 @@ class ModelManager {
   static async loadModels() {
     this.models = [
       ...this.getOpenAiModels(),
+      ...this.getGeminiModels(),
       ...this.getAnthropicModels(),
       ...(await this.fetchOllamaModels())
     ];
@@ -50,6 +51,15 @@ class ModelManager {
       new Model('openai', 'o1-preview', 15, 60)
     ];
   }
+
+  static getGeminiModels() {
+    return [
+      // Gemini 2.0 Models
+      new Model('gemini', 'gemini-2.0-flash', 0.1, 0.4),
+      new Model('gemini', 'gemini-2.0-flash-lite', 0.075, 0.3),
+      // Gemini 1.5 Models
+      new Model('gemini', 'gemini-1.5-pro', 0.3125, 5),  // 128k-plus, 0.625, 10
+      new Model('gemini', 'gemini-1.5-flash', 0.075, 0.3),  // 128k-plus', 0.15, 0.6
     ];
   }
 

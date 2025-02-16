@@ -62,10 +62,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
  */
 async function handleAiRequest(request) {
   try {
-    const { openaiApiKey, anthropicApiKey, basePrompt } = await getApiKeys();
+    const { openaiApiKey, anthropicApiKey, geminiApiKey, basePrompt } = await getApiKeys();
     const modelType = request.model.type;
 
-    if ((modelType === "openai" && !openaiApiKey) || (modelType === "anthropic" && !anthropicApiKey)) {
+    const apiKey = modelType === "openai"
+      ? openaiApiKey
+      : modelType === "anthropic"
+        ? anthropicApiKey
+        : modelType === "gemini"
+          ? geminiApiKey
+          : null;
+
+    if (!apiKey) {
       return handleError("API Key is missing.");
     }
 
@@ -74,7 +82,7 @@ async function handleAiRequest(request) {
 
     console.log(prompt);
 
-    const summary = await callModelApi(modelType, request.model.name, openaiApiKey, anthropicApiKey, prompt, chatHistory);
+    const summary = await callModelApi(modelType, request.model.name, apiKey, prompt, chatHistory);
     
     chrome.runtime.sendMessage({ action: "response_result", summary });
   } catch (error) {
@@ -87,7 +95,12 @@ async function handleAiRequest(request) {
  */
 function getApiKeys() {
   return new Promise((resolve) => {
-    chrome.storage.sync.get(["openaiApiKey", "anthropicApiKey", "basePrompt"], (data) => {
+    chrome.storage.sync.get([
+      "openaiApiKey",
+      "geminiApiKey",
+      "anthropicApiKey",
+      "basePrompt"
+    ], (data) => {
       resolve(data);
     });
   });
@@ -117,17 +130,19 @@ ${request.content}
 
 # **Custom Instructions:**
 ${basePrompt}
-  `.trim();
+`.trim();
 }
 
 /**
  * Calls the appropriate AI model based on the model type.
  */
-async function callModelApi(modelType, modelName, openaiKey, anthropicKey, prompt, chatHistory) {
+async function callModelApi(modelType, modelName, apiKey, prompt, chatHistory) {
   if (modelType === "openai") {
-    return await callOpenAI(openaiKey, modelName, prompt, chatHistory, true);
+    return await callOpenAI(apiKey, modelName, prompt, chatHistory, true);
+  } else if (modelType === "gemini") {
+    return await callGemini(apiKey, modelName, prompt, chatHistory, true);
   } else if (modelType === "anthropic") {
-    return await callAnthropic(anthropicKey, modelName, prompt, chatHistory);
+    return await callAnthropic(apiKey, modelName, prompt, chatHistory);
   }
   throw new Error("Invalid model type.");
 }
@@ -137,6 +152,9 @@ async function callModelApi(modelType, modelName, openaiKey, anthropicKey, promp
  */
 function handleError(message, error = null) {
   console.error(message, error || "");
+  if (error) {
+    message += `\n${error.stack || error}`;
+  }
   chrome.runtime.sendMessage({ action: "response_result", summary: message });
 }
 
@@ -244,6 +262,132 @@ async function callOpenAI(apiKey, modelName, prompt, chatHistory, stream = false
       }
     }
     // Return a full AiResponse object once streaming is complete.
+    return new AiResponse(fullContent, totalInputTokens, totalOutputTokens);
+  }
+}
+
+/**
+ * Calls the Google Gemini API (Generative Language API) to generate content.
+ * 
+ * This function supports both full-response and simulated streaming modes.
+ * In streaming mode, it attempts to read newline-separated JSON chunks.
+ *
+ * @param {string} apiKey - Your Google API key.
+ * @param {string} modelName - The Gemini model to use (e.g., "gemini-1.5-flash").
+ * @param {string} prompt - The text prompt for generation.
+ * @param {boolean} stream - Whether to enable streaming mode.
+ * @returns {Promise<AiResponse>} - The generated content wrapped in an AiResponse object.
+ */
+async function callGemini(apiKey, modelName, prompt, chatHistory, stream = false) {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:${stream ? "streamGenerateContent" : "generateContent"}?key=${apiKey}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      contents: [
+        { role: "user", parts: [{ text: prompt }] },
+        ...chatHistory.map(x => {
+          return {
+            role: { "AI": "model", "User": "user" }[x.sender],
+            parts: [{ text: x.text }]
+          }
+        })
+      ]
+    })
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Gemini API request failed with status ${response.status}`;
+
+    try {
+      const errorData = await response.json();
+      errorMessage += '\n' + errorData.map(x => x.error)
+        .map(x => `${x.status}: ${x.message}`).join("\n");
+    } catch (error) {
+      errorMessage += " (Failed to parse error response)";
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  if (!stream) {
+    // Non-streaming: wait for the full JSON response.
+    const data = await response.json();
+    const generatedText = data.candidates
+      ?.map((candidate) =>
+        candidate.content?.parts?.map((part) => part.text).join("")
+      )
+      .join("") || "";
+  
+    return new AiResponse(
+      generatedText,
+      data.usageMetadata?.promptTokenCount || 0,
+      data.usageMetadata?.candidatesTokenCount || 0
+    );
+  } else {
+    // Streaming response handling
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let done = false;
+    let fullContent = "";
+    let bufferedText = "";
+    let totalInputTokens = null;
+    let totalOutputTokens = null;
+
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      if (value) {
+        let chunkText = decoder.decode(value, { stream: !done }).trim();
+        // Remove first "[" from the first chunk
+        if (bufferedText === "" && chunkText.startsWith("[")) {
+          chunkText = chunkText.slice(1);
+        }
+        // Remove last "]%" from the final chunk
+        if (done && chunkText.endsWith("]%")) {
+          chunkText = chunkText.slice(0, -2);
+        }
+
+        bufferedText += chunkText;
+        // Separate individual JSON objects ({ candidates: [...] }) by unit
+        let openBraces = 0;
+        let startIndex = -1;
+        for (let i = 0; i < bufferedText.length; i++) {
+          if (bufferedText[i] === "{") {
+            if (startIndex === -1) startIndex = i; // Mark start of JSON
+            openBraces++;
+          } else if (bufferedText[i] === "}") {
+            openBraces--;
+            if (openBraces === 0) {
+              const jsonStr = bufferedText.slice(startIndex, i + 1); // Extract JSON string
+              try {
+                const parsed = JSON.parse(jsonStr); // Validate JSON
+                const candidate = parsed.candidates?.[0];
+                const generatedText = candidate?.content?.parts
+                  ?.map(part => part.text)
+                  .join("");
+
+                if (generatedText) {
+                  fullContent += generatedText;
+                  // Call sendMessage whenever an individual JSON object is completed
+                  chrome.runtime.sendMessage({ action: "stream_update", chunk: generatedText });
+                }
+                // Update token counts if available
+                if (parsed.usageMetadata) {
+                  totalInputTokens = parsed.usageMetadata.promptTokenCount;
+                  totalOutputTokens = parsed.usageMetadata.candidatesTokenCount;
+                }
+                bufferedText = bufferedText.slice(i + 1).trim(); // Remove processed JSON
+              } catch (err) {
+                // JSON is incomplete, return null
+                console.warn("Failed to parse JSON part, will retry with the next chunk:", bufferedText);
+              }
+            }
+          }
+        }
+      }
+    }
     return new AiResponse(fullContent, totalInputTokens, totalOutputTokens);
   }
 }

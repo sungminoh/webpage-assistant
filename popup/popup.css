@@ -17,6 +17,7 @@
   --ai-bg: #e0e0e0;
   --fade-duration: 0.3s;
   --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-size: 12px;
   --code-font: 'Fira Code', monospace;
   --btn-padding: 2px 4px;
   --btn-size: 24px;
@@ -42,6 +43,7 @@
   --ai-bg: #6b707a;
   --fade-duration: 0.3s;
   --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-size: 12px;
   --code-font: 'Fira Code', monospace;
   --btn-padding: 2px 4px;
   --btn-size: 24px;
@@ -67,6 +69,7 @@
   --ai-bg: #d9e8c7;
   --fade-duration: 0.3s;
   --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-size: 12px;
   --code-font: 'Fira Code', monospace;
   --btn-padding: 2px 4px;
   --btn-size: 24px;
@@ -92,6 +95,7 @@
   --ai-bg: #222222;
   --fade-duration: 0.3s;
   --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-size: 12px;
   --code-font: 'Fira Code', monospace;
   --btn-padding: 2px 4px;
   --btn-size: 24px;
@@ -117,6 +121,7 @@
   --ai-bg: #000000;
   --fade-duration: 0.3s;
   --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-size: 12px;
   --code-font: 'Fira Code', monospace;
   --btn-padding: 2px 4px;
   --btn-size: 24px;
@@ -193,7 +198,7 @@ section {
 /* Ultra Compact HTML Content Styling */
 .html-content * {
   all: revert;
-  font-size: 12px;
+  font-size: var(--font-size);
   line-height: 1.2;
   margin: 0px;
 }
@@ -207,7 +212,7 @@ section {
 }
 
 .html-content p {
-  font-size: 12px;
+  font-size: var(--font-size);
   /* margin: 0.2em 0; 더 타이트한 간격 */
 }
 
@@ -216,7 +221,7 @@ section {
   padding: 1px 2px;
   border-radius: 2px;
   font-family: var(--code-font);
-  font-size: 12px;
+  font-size: var(--font-size);
 }
 
 .html-content pre {
@@ -225,7 +230,7 @@ section {
   border-radius: 2px;
   overflow-x: auto;
   font-family: var(--code-font);
-  font-size: 12px;
+  font-size: var(--font-size);
   /* margin: 0.3em 0; 줄 간격 최소화 */
 }
 
@@ -370,6 +375,13 @@ section {
   word-wrap: break-word;
   white-space: pre-wrap;
   padding: 6px;
+}
+
+.usage-info {
+  word-wrap: break-word;
+  font-size: 10px;
+  font-style: italic;
+  color: var(--secondary-text-color);
 }
 
 .placeholder {
