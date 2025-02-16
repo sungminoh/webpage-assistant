@@ -112,7 +112,7 @@ export class ChatManager {
       usageInfo = {
         inputTokens: aiResponse.inputTokens,
         outputTokens: aiResponse.outputTokens,
-        totalPrice: ((model.inputPrice * aiResponse.inputTokens) + (model.outputPrice * aiResponse.outputTokens)) / 1000
+        totalPrice: model.getPrice(aiResponse.inputTokens, aiResponse.outputTokens)
       };
     }
 

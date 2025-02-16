@@ -21,6 +21,11 @@ class Model {
       return null;
     }
   }
+
+  getPrice(inputTokens, outputTokens) {
+    return ((this.inputPrice * inputTokens) + (this.outputPrice * outputTokens))
+      / 1000000
+  }
 }
 
 class ModelManager {
@@ -38,19 +43,21 @@ class ModelManager {
 
   static getOpenAiModels() {
     return [
-      new Model('openai', 'gpt-4o-mini', 0.00015, 0.0006),
-      new Model('openai', 'gpt-3.5-turbo', 0.002, 0.002),
-      new Model('openai', 'gpt-4o', 0.005, 0.015),
-      new Model('openai', 'o1-mini', 0.0075, 0.03),
-      new Model('openai', 'o1-preview', 0.015, 0.06)
+      new Model('openai', 'gpt-4o-mini', 0.15, 0.6),
+      new Model('openai', 'gpt-3.5-turbo', 2, 2),
+      new Model('openai', 'gpt-4o', 5, 15),
+      new Model('openai', 'o1-mini', 7.5, 30),
+      new Model('openai', 'o1-preview', 15, 60)
+    ];
+  }
     ];
   }
 
   static getAnthropicModels() {
     return [
-      new Model('anthropic', 'claude-3-5-haiku-20241022', 0.00025, 0.00125),
-      new Model('anthropic', 'claude-3-5-sonnet-20241022', 0.003, 0.015),
-      new Model('anthropic', 'claude-3-opus-20240229', 0.015, 0.075)
+      new Model('anthropic', 'claude-3-5-haiku-20241022', 0.25, 1.25),
+      new Model('anthropic', 'claude-3-5-sonnet-20241022', 3, 15),
+      new Model('anthropic', 'claude-3-opus-20240229', 15, 75)
     ];
   }
 
@@ -72,7 +79,7 @@ class ModelManager {
       const price =
         model.inputPrice === 0 && model.outputPrice === 0
           ? "Free"
-          : `Input: $${model.inputPrice}/1K tokens, Output: $${model.outputPrice}/1K tokens`;
+          : `Input: $${model.inputPrice}/1M tokens, Output: $${model.outputPrice}/1M tokens`;
       return `<option value="${model.serialize()}">${model.name} (${model.type} - ${price})</option>`;
     }).join("");
   }
