@@ -69,12 +69,12 @@ async function handleAiRequest(request) {
       return handleError("API Key is missing.");
     }
 
+    const prompt = generatePrompt(request, basePrompt);
     const chatHistory = await getChatHistory();
-    const prompt = generatePrompt(request, basePrompt, chatHistory);
 
     console.log(prompt);
 
-    const summary = await callModelApi(modelType, request.model.name, openaiApiKey, anthropicApiKey, prompt);
+    const summary = await callModelApi(modelType, request.model.name, openaiApiKey, anthropicApiKey, prompt, chatHistory);
     
     chrome.runtime.sendMessage({ action: "response_result", summary });
   } catch (error) {
@@ -100,9 +100,7 @@ function getChatHistory() {
   return new Promise((resolve) => {
     chrome.storage.local.get(["chatHistory"], (data) => {
       const chatHistory = data.chatHistory || [];
-      resolve(chatHistory
-        .filter(msg => !msg.isPlaceholder)
-        .map(entry => `${entry.sender}: ${entry.text}`).join("\n"));
+      resolve(chatHistory.filter(msg => !msg.isPlaceholder));
     });
   });
 }
@@ -112,27 +110,24 @@ function getChatHistory() {
  */
 function generatePrompt(request, basePrompt, historyText) {
   return `
-### **Compressed HTML Representation:**
+${SYSTEM_PROMPT}
+
+# **Compressed HTML Representation:**
 ${request.content}
 
-### **Custom Instructions:**
+# **Custom Instructions:**
 ${basePrompt}
-
-### **Conversation History:**
-${historyText}
-
-Answer to the user's latest message.
   `.trim();
 }
 
 /**
  * Calls the appropriate AI model based on the model type.
  */
-async function callModelApi(modelType, modelName, openaiKey, anthropicKey, prompt) {
+async function callModelApi(modelType, modelName, openaiKey, anthropicKey, prompt, chatHistory) {
   if (modelType === "openai") {
-    return await callOpenAI(openaiKey, modelName, SYSTEM_PROMPT, prompt, true);
+    return await callOpenAI(openaiKey, modelName, prompt, chatHistory, true);
   } else if (modelType === "anthropic") {
-    return await callAnthropic(anthropicKey, modelName, SYSTEM_PROMPT, prompt);
+    return await callAnthropic(anthropicKey, modelName, prompt, chatHistory);
   }
   throw new Error("Invalid model type.");
 }
@@ -157,7 +152,7 @@ class AiResponse {
  * Calls the OpenAI API with stream enabled. Reads the response stream chunk by chunk,
  * sending each chunk via "stream_update" messages. Accumulates the full content and token usage.
  */
-async function callOpenAI(apiKey, modelName, systemPrompt, userPrompt, stream = false) {
+async function callOpenAI(apiKey, modelName, prompt, chatHistory, stream = false) {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -168,8 +163,16 @@ async function callOpenAI(apiKey, modelName, systemPrompt, userPrompt, stream = 
       model: modelName,
       stream: stream,  // Enable streaming
       messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
+        {
+          "role": "developer",
+          "content": [ { "type": "text", "text": prompt } ]
+        },
+        ...chatHistory.map(x => {
+          return {
+            "role": { "AI": "assistant", "User": "user" }[x.sender],
+            "content": [{ "type": "text", "text": x.text }]
+          }
+        })
       ]
     })
   });
