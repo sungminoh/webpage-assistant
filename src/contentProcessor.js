@@ -3,7 +3,6 @@ import { StorageHelper } from "./storageHelper.js";
 import { chatManager } from "./chatManager.js";
 import { ModelManager } from "./modelManager.js";
 
-const ALLOWED_ATTRS = { a: ["href"], img: ["src", "alt"], iframe: ["src"] };
 class ContentProcessor {
   static async submitPrompt(prompt) {
     if (!prompt) return;
@@ -19,6 +18,8 @@ class ContentProcessor {
     chatManager.showPlaceholder();
 
     function processPageContent(prompt, model, selectedHtml) {
+      const ALLOWED_ATTRS = { a: ["href"], img: ["src", "alt"], iframe: ["src"] };
+
       function cleanDom(dom) {
         const cleaned = dom.cloneNode(true);
         cleaned.querySelectorAll([
