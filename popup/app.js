@@ -179,6 +179,7 @@ async function initializeApp() {
 
   // 3. 모델 관리 초기화: 모델 로드 및 드롭다운 옵션 업데이트, 저장된 모델 복원
   await ModelManager.loadModels();
+  ModelManager.addEventListener();
 
   // 4. 이벤트 핸들러 등록
   setupEventListeners();

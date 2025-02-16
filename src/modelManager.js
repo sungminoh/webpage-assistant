@@ -103,6 +103,11 @@ class ModelManager {
       return null;
     }
   }
+
+  static addEventListener() {
+    const modelSelect = document.getElementById("modelSelect");
+    modelSelect.addEventListener("change", this.saveSelectedModel);
+  }
 }
 
 export { ModelManager, Model };
