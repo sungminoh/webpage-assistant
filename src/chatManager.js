@@ -94,6 +94,7 @@ export class ChatManager {
   appendToLastAiMessage(chunk) {
     // Ensure the AI message exists for streaming
     if (this.currentAiMessageIndex === null || this.messages[this.currentAiMessageIndex]?.sender !== "AI") {
+      this.removePlaceholder();
       this.currentAiMessageIndex = this.messages.length;
       this.messages.push({ sender: "AI", text: chunk, isStreaming: true });
     } else {
