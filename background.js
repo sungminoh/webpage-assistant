@@ -164,13 +164,13 @@ async function callOpenAI(apiKey, modelName, prompt, chatHistory, stream = false
       stream: stream,  // Enable streaming
       messages: [
         {
-          "role": "developer",
-          "content": [ { "type": "text", "text": prompt } ]
+          role: "developer",
+          content: [ { "type": "text", "text": prompt } ]
         },
         ...chatHistory.map(x => {
           return {
-            "role": { "AI": "assistant", "User": "user" }[x.sender],
-            "content": [{ "type": "text", "text": x.text }]
+            role: { "AI": "assistant", "User": "user" }[x.sender],
+            content: [{ type: "text", text: x.text }]
           }
         })
       ]
@@ -178,7 +178,18 @@ async function callOpenAI(apiKey, modelName, prompt, chatHistory, stream = false
   });
 
   if (!response.ok) {
-    throw new Error("OpenAI API request failed with status " + response.status);
+    let errorMessage = `OpenAI API request failed with status ${response.status}`;
+  
+    try {
+      const errorData = await response.json();
+      if (errorData.error && errorData.error.message) {
+        errorMessage += `: ${errorData.error.message}`;
+      }
+    } catch (error) {
+      errorMessage += " (Failed to parse error response)";
+    }
+  
+    throw new Error(errorMessage);
   }
 
   if (!stream) {
