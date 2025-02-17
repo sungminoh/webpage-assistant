@@ -193,7 +193,7 @@ async function callModelApi(modelType, modelName, apiKey, prompt, chatHistory) {
     case "gemini":
       return await callGemini(apiKey, modelName, prompt, chatHistory, true);
     case "anthropic":
-      return await callAnthropic(apiKey, modelName, prompt, chatHistory, false);
+      return await callAnthropic(apiKey, modelName, prompt, chatHistory, true);
     default:
       throw new Error("Invalid model type.");
   }
@@ -409,8 +409,8 @@ async function callGemini(apiKey, modelName, prompt, chatHistory, stream = false
                 }
                 // Update token counts if available
                 if (parsed.usageMetadata) {
-                  totalInputTokens = parsed.usageMetadata.promptTokenCount;
-                  totalOutputTokens = parsed.usageMetadata.candidatesTokenCount;
+                  totalInputTokens += parsed.usageMetadata.promptTokenCount;
+                  totalOutputTokens += parsed.usageMetadata.candidatesTokenCount;
                 }
                 bufferedText = bufferedText.slice(i + 1).trim();
                 i = -1; // Restart loop for any remaining buffered text.
@@ -447,13 +447,63 @@ async function callAnthropic(apiKey, modelName, prompt, chatHistory, stream = fa
         content: [{ type: "text", text: msg.text }],
       })),
       max_tokens: 300,
+      stream, // Enable streaming if true
     }),
   });
 
-  const data = await response.json();
-  const content = data.content[0].text;
-  const usage = data.usage || {};
-  return new AiResponse(content, usage.input_tokens || 0, usage.output_tokens || 0);
+  // Non-streaming mode: simply parse and return the response.
+  if (!stream) {
+    const data = await response.json();
+    const content = data.content[0].text;
+    const usage = data.usage || {};
+    return new AiResponse(content, usage.input_tokens || 0, usage.output_tokens || 0);
+  } else {
+    // Streaming mode: process server-sent events (SSE)
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let done = false;
+    let fullContent = "";
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
+
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      if (value) {
+        // Decode the chunk into text
+        const chunkText = decoder.decode(value, { stream: !done });
+        // Split the chunk into individual lines (each SSE event is sent on a new line)
+        const lines = chunkText.split("\n").filter(line => line.trim() !== "");
+        for (const line of lines) {
+          // Anthropic SSE events are prefixed with "data: "
+          if (line.startsWith("data: ")) {
+            const dataStr = line.slice(6).trim();
+            try {
+              let parsed = JSON.parse(dataStr);
+              if (parsed.type === "message_start") {
+                parsed = parsed.message;
+              }
+              // Process content block deltas to extract text.
+              if (parsed.type === "content_block_delta") {
+                const delta = parsed.delta;
+                if (delta && delta.type === "text_delta" && delta.text) {
+                  fullContent += delta.text;
+                }
+              }
+              // Optionally update token counts from message_delta events.
+              if (parsed.usage) {
+                totalInputTokens += parsed.usage.input_tokens || totalInputTokens;
+                totalOutputTokens += parsed.usage.output_tokens || totalOutputTokens;
+              }
+            } catch (err) {
+              console.error("Error parsing stream chunk:", err);
+            }
+          }
+        }
+      }
+    }
+    return new AiResponse(fullContent, totalInputTokens, totalOutputTokens);
+  }
 }
 
 /**
