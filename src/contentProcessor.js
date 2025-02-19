@@ -75,12 +75,24 @@ class ContentProcessor {
         return [tagName, childArray];
       }
 
+      function removeEmpty(arr) {
+        if (!Array.isArray(arr) || arr.length !== 2) return arr;
+
+        const children = arr[1]
+          .map(removeEmpty)
+          .filter(child => !(Array.isArray(child) ? child.length === 0 : child == null));
+
+        return children.length ? [arr[0], children] : [];
+      }
+
       const targetDom = selectedHtml
         ? document.createRange().createContextualFragment(selectedHtml).firstElementChild
         : document.body;
       const cleanedDom = cleanDom(targetDom);
       const compressedDom = compressDOM(cleanedDom);
-      const content = JSON.stringify(elementToArray(compressedDom));
+      const structuredArray = elementToArray(compressedDom)
+      const compressedArray = removeEmpty([structuredArray]);
+      const content = JSON.stringify(compressedArray);
 
       chrome.runtime.sendMessage({ action: "ask_ai", content, model, prompt });
     }
