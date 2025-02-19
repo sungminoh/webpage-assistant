@@ -1,5 +1,4 @@
 // content/content.js
-
 function getCssText(element) {
   const computedStyle = window.getComputedStyle(element);
   let cssText = "";
@@ -57,7 +56,7 @@ class DomSelector {
   }
 
   handleToggleMessage(message, sender, sendResponse) {
-    if (message.action === "toggleDomSelector") {
+    if (message.action === "toggle_dom_selector") {
       this.selectionActive = message.active;
       if (this.selectionActive) {
         this.overlay.style.display = "block";

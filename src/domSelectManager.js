@@ -2,41 +2,41 @@
 import { StorageHelper } from "./storageHelper.js";
 import { UIHelper } from "./uiHelper.js";
 
+export function injectScript() {
+  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+    if (!tabs.length) return; // No active tab found.
+    // Check if DomSelector already exists in the tab
+    const tab = tabs[0];
+    const [{ result: isDomDefined }] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => typeof window.DomSelector !== "undefined",
+    });
+
+    if (isDomDefined) {
+      console.debug("DomSelector is already injected.");
+    } else {
+      console.debug("Injecting content script...");
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ["content/content.js"],
+      });
+      chrome.scripting.insertCSS({
+        target: { tabId: tab.id },
+        files: ["content/content.css"]
+      });
+    }
+  });
+}
+
+
 class DomSelectManager {
   constructor(htmlBox) {
+    injectScript();
     this.htmlBox = htmlBox;
     this.htmlContainer = htmlBox?.parentElement;
     this.buttons = this.htmlContainer.querySelector(".html-box-buttons")
     this.visible = false;
-    this.insectScript();
     this.setupCopyHtmlButton(); // Initialize copy button click event
-  }
-
-  insectScript() {
-    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-      if (tabs.length === 0) return; // No active tab found.
-      // Check if DomSelector already exists in the tab
-      const tab = tabs[0];
-      const [result] = await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => typeof window.DomSelector !== "undefined",
-      });
-
-      if (result?.result) {
-        console.debug("DomSelector is already injected.");
-        chrome.tabs.sendMessage(tab.id, { action: "toggleDomSelector" });
-      } else {
-        console.debug("Injecting content script...");
-        await chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ["content/content.js"],
-        });
-        await chrome.scripting.insertCSS({
-          target: { tabId: tab.id },
-          files: ["content/content.css"]
-        });
-      }
-    });
   }
 
   setupCopyHtmlButton() {
@@ -89,7 +89,7 @@ class DomSelectManager {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs.length === 0) return;
       chrome.tabs.sendMessage(tabs[0].id, {
-        action: "toggleDomSelector",
+        action: "toggle_dom_selector",
         active: this.visible
       });
     });

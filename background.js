@@ -1,4 +1,6 @@
 // background.js
+import { injectScript } from "./src/domSelectManager.js";
+import { convertDomToCleanCompressedJson } from "./src/utils/htmlUtils.js";
 
 const SYSTEM_PROMPT = `
 You are an AI assistant specialized in analyzing compressed HTML structures to extract and summarize the most **informative, detailed, and functionally useful content** from a given webpage. 
@@ -76,7 +78,14 @@ chrome.commands.onCommand.addListener((command) => {
   if (command === "open_popup") {
     chrome.action.openPopup();
   } else if (command === "toggle_selector") {
-    toggleDomSelector();
+    injectScript();
+    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+      const tab = tabs[0];
+      chrome.tabs.sendMessage(tab.id, {
+        action: "toggle_dom_selector",
+        active: true
+      });
+    });
   }
 });
 
@@ -85,32 +94,6 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.set({ selectedModel: "gpt-4o" });
 });
 
-async function toggleDomSelector() {
-  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-    if (!tabs.length) return;
-    const tab = tabs[0];
-    const [{ result }] = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: () => typeof window.DomSelector !== "undefined",
-    });
-
-    if (result) {
-      console.log("DomSelector is already injected.");
-      chrome.tabs.sendMessage(tab.id, { action: "toggleDomSelector" });
-    } else {
-      console.log("Injecting content script...");
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ["content/content.js"],
-      });
-      await chrome.scripting.insertCSS({
-        target: { tabId: tab.id },
-        files: ["content/content.css"],
-      });
-      chrome.tabs.sendMessage(tab.id, { action: "toggleDomSelector", active: true });
-    }
-  });
-}
 
 /**
  * Handles the AI request by gathering API keys, generating a prompt,
@@ -176,7 +159,7 @@ function generatePrompt(content, basePrompt) {
 ${SYSTEM_PROMPT}
 
 # **Compressed HTML Representation:**
-${content}
+${convertDomToCleanCompressedJson(content)}
 
 # **Custom Instructions:**
 ${basePrompt}
