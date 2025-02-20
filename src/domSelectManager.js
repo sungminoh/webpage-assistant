@@ -9,19 +9,19 @@ export async function injectScript(timeout) {
 
   // Check if the script is already injected
   const [{ result: isInjected }] = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
+    target: { tabId: tab.id },
     func: () => !!window.__content_script_injected
-    });
+  });
 
   if (!isInjected) {
     console.debug(`[${new Date().toISOString()}] Injecting content script...`);
-      chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ["content/content.js"],
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ["content/content.js"],
     })
-      chrome.scripting.insertCSS({
-        target: { tabId: tab.id },
-        files: ["content/content.css"]
+    chrome.scripting.insertCSS({
+      target: { tabId: tab.id },
+      files: ["content/content.css"]
     })
     // Set a flag in the page's window object to prevent reinjection
     chrome.scripting.executeScript({
@@ -37,7 +37,7 @@ export async function injectScript(timeout) {
       if (message.action === "dom_selector_ready") {
         chrome.runtime.onMessage.removeListener(listener);
         resolve();
-}
+      }
     };
     chrome.runtime.onMessage.addListener(listener);
     // Set a timeout to avoid waiting indefinitely.
@@ -65,6 +65,7 @@ class DomSelectManager {
 
   toggle() {
     this.setActive(!this.active);
+    this.sendToggleMessage();
     if (this.active) {
       window.close();
     }
@@ -72,11 +73,8 @@ class DomSelectManager {
 
   async setActive(active) {
     this.active = active;
+    await StorageHelper.set({ domSelectionActive: active }, "local");
     this.updateButtonState();
-    if (!active) {
-      await this.clearSelectedHTML();
-    }
-    this.sendToggleMessage();
   }
 
   updateButtonState() {
@@ -96,14 +94,6 @@ class DomSelectManager {
     }
   }
 
-  async clearSelectedHTML() {
-    await StorageHelper.remove(["selectedHTML", "selectedCSS"], "local");
-    if (this.htmlBox) {
-      this.htmlBox.innerHTML = "";
-    }
-    console.debug("Selected HTML cleared.");
-  }
-
   sendToggleMessage() {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs.length === 0) return;
@@ -114,7 +104,7 @@ class DomSelectManager {
   }
 
   load() {
-    StorageHelper.get(["selectedHTML", "selectedCSS"], "local").then(({ selectedHTML, selectedCSS }) => {
+    StorageHelper.get(["domSelectionActive", "selectedHTML", "selectedCSS"], "local").then(({ domSelectionActive, selectedHTML, selectedCSS }) => {
       if (selectedHTML?.trim()) {
         if (this.htmlBox) {
           this.htmlBox.innerHTML = selectedHTML;
@@ -122,7 +112,7 @@ class DomSelectManager {
             this.htmlBox.style.cssText = selectedCSS;
           }
         }
-        this.setActive(true);
+        this.setActive(domSelectionActive);
       }
     });
   }

@@ -59,8 +59,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case "ask_ai":
       handleAiRequest(message);
       break;
-    case "click_target_dom":
+    case "change_selected_dom":
       chrome.storage.local.set({
+        domSelectionActive: message.active,
         selectedHTML: message.html,
         selectedCSS: message.css,
       });
