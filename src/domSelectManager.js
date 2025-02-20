@@ -1,6 +1,11 @@
 // src/domSelectManager.js
 import { StorageHelper } from "./storageHelper.js";
 import { UIHelper } from "./uiHelper.js";
+import { marked } from "../libs/marked.min.js";
+import { TurndownService } from "../libs/turndown.js";
+
+const turndownService = new TurndownService()
+
 
 export async function injectScript(timeout) {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -48,19 +53,51 @@ export async function injectScript(timeout) {
   });
 }
 
+
 class DomSelectManager {
-  constructor(htmlBox) {
+  constructor(htmlBoxContainer) {
     injectScript();
-    this.htmlBox = htmlBox;
-    this.htmlContainer = htmlBox?.parentElement;
-    this.buttons = this.htmlContainer.querySelector(".html-box-buttons")
+    this.htmlBoxContainer = htmlBoxContainer;
+    this.htmlContainer = this.htmlBoxContainer?.parentElement;
+    this.htmlBox = htmlBoxContainer.querySelector(".html-box");
+    this.markdownBox = htmlBoxContainer.querySelector(".markdown-box");
+    this.leftButtons = this.htmlContainer.querySelector(".left-controls .html-box-buttons")
+    this.rightButtons = this.htmlContainer.querySelector(".right-controls .html-box-buttons")
+    this.originalHtml = null;
+    this.textToCopy = "";
     this.active = false;
-    this.setupCopyHtmlButton(); // Initialize copy button click event
+    this.setupCopyButton(); // Initialize copy button click event
+    this.setupSwitchButton(); // Initialize copy button click event
     this.load();
   }
 
-  setupCopyHtmlButton() {
-    this.buttons.appendChild(UIHelper.createCopyButton("copyHtmlBtn", () => this.htmlBox?.innerHTML));
+  setupCopyButton() {
+    this.leftButtons.appendChild(UIHelper.createCopyButton("copySelectedBtn", () => this.textToCopy));
+  }
+
+  async setupSwitchButton() {
+    const htmlModeButton = UIHelper.createSVGButton("button", "html-mode-button", UIHelper.getHtmlIcon(), activateHtmlMode.bind(this))
+    const markdownModeButton = UIHelper.createSVGButton("button", "markdown-mode-button", UIHelper.getMarkdownIcon(), activateMarkdownMode.bind(this));
+
+    function activateHtmlMode() {
+      htmlModeButton.classList.add('active');
+      markdownModeButton.classList.remove('active');
+      StorageHelper.set({ htmlMode: "html" }, "sync").then(this.load.bind(this));
+    }
+
+    function activateMarkdownMode() {
+      markdownModeButton.classList.add('active');
+      htmlModeButton.classList.remove('active');
+      StorageHelper.set({ htmlMode: "markdown" }, "sync").then(this.load.bind(this));
+    }
+    const { htmlMode } = await StorageHelper.get("htmlMode", "sync");
+    if (htmlMode == "markdown") {
+      markdownModeButton.classList.add('active');
+    } else {
+      htmlModeButton.classList.add('active');
+    }
+    this.rightButtons.appendChild(htmlModeButton);
+    this.rightButtons.appendChild(markdownModeButton);
   }
 
   toggle() {
@@ -90,7 +127,7 @@ class DomSelectManager {
     const btn = document.getElementById("activateSelectionBtn");
     if (btn) {
       btn.innerHTML = this.active ? activateIcon : deactivateIcon;
-      btn.classList.toggle("highlight", this.active);
+      btn.classList.toggle("active", this.active);
     }
   }
 
@@ -104,13 +141,23 @@ class DomSelectManager {
   }
 
   load() {
-    StorageHelper.get(["domSelectionActive", "selectedHTML", "selectedCSS"], "local").then(({ domSelectionActive, selectedHTML, selectedCSS }) => {
+    StorageHelper.get(["domSelectionActive", "selectedHTML", "selectedCSS"], "local").then(async ({ domSelectionActive, selectedHTML, selectedCSS }) => {
+      const { htmlMode } = await StorageHelper.get("htmlMode", "sync")
       if (selectedHTML?.trim()) {
-        if (this.htmlBox) {
-          this.htmlBox.innerHTML = selectedHTML;
+        this.originalHtml = selectedHTML;
+        if (htmlMode === "markdown") {
+          this.textToCopy = turndownService.turndown(selectedHTML);
+          this.markdownBox.innerHTML = marked.parse(this.textToCopy);
+          this.markdownBox.style.display = "block";
+          this.htmlBox.style.display = "none";
+        } else {
+          this.textToCopy = selectedHTML;
+          this.htmlBox.innerHTML = this.textToCopy;
           if (selectedCSS?.trim()) {
             this.htmlBox.style.cssText = selectedCSS;
           }
+          this.htmlBox.style.display = "block";
+          this.markdownBox.style.display = "none";
         }
         this.setActive(domSelectionActive);
       }

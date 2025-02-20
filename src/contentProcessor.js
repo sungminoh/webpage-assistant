@@ -2,6 +2,9 @@ import { StorageHelper } from "./storageHelper.js";
 import { chatManager } from "./chatManager.js";
 import { ModelManager } from "./modelManager.js";
 import { convertHtmlToCleanCompressedJson } from "./utils/htmlUtils.js";
+import { TurndownService } from "../libs/turndown.js";
+
+const turndownService = new TurndownService()
 
 class ContentProcessor {
   constructor() {
@@ -22,16 +25,17 @@ class ContentProcessor {
     chatManager.showPlaceholder();
 
     const { selectedHTML } = await StorageHelper.get("selectedHTML");
-
-    if (selectedHTML) {
-      const cleanCompressedJson = convertHtmlToCleanCompressedJson(selectedHTML);
-      chrome.runtime.sendMessage({
-        action: "ask_ai",
-        content: JSON.stringify(cleanCompressedJson),
-        model,
-        prompt
-      });
-    }
+    const { htmlMode } = await StorageHelper.get("htmlMode", "sync")
+    const content = htmlMode == "markdown"
+      ? turndownService.turndown(selectedHTML)
+      : JSON.stringify(convertHtmlToCleanCompressedJson(selectedHTML));
+    debugger;
+    chrome.runtime.sendMessage({
+      action: "ask_ai",
+      content,
+      model,
+      prompt
+    });
   }
 
   async validateApiKey(model) {

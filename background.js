@@ -2,7 +2,7 @@
 import { injectScript } from "./src/domSelectManager.js";
 
 const SYSTEM_PROMPT = `
-You are an AI assistant specialized in analyzing compressed HTML structures to extract and summarize the most **informative, detailed, and functionally useful content** from a given webpage. 
+You are an AI assistant specialized in analyzing web page to extract and summarize the most **informative, detailed, and functionally useful content** from a given webpage. 
 Your goal is to help users **quickly absorb the essential information from a webpage** without reading it in full. Your response should focus on **key insights, core messages, and actionable takeaways**.
 
 # Rules for Summarizing Content Efficiently:
@@ -86,7 +86,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
 async function handleAiRequest(request) {
   try {
-    const { openaiApiKey, anthropicApiKey, geminiApiKey, basePrompt } = await getApiKeys();
+    const { htmlMode, openaiApiKey, anthropicApiKey, geminiApiKey, basePrompt } = await getApiKeys();
     const { type: modelType, name: modelName } = request.model;
     const apiKey =
       modelType === "openai" ? openaiApiKey :
@@ -94,10 +94,12 @@ async function handleAiRequest(request) {
       modelType === "gemini" ? geminiApiKey :
       null;
 
-    if (!apiKey) throw new Error("API Key is missing.");
+    if (!apiKey) return handleError("API Key is missing.");
 
-    const prompt = generatePrompt(request.content, basePrompt);
+    const prompt = generatePrompt(htmlMode, request.content, basePrompt);
+    console.debug(prompt)
     const chatHistory = await getChatHistory();
+    console.debug(chatHistory)
     const summary = await callModelApi(modelType, modelName, apiKey, prompt, chatHistory);
 
     chrome.runtime.sendMessage({ action: "response_result", summary });
@@ -108,7 +110,7 @@ async function handleAiRequest(request) {
 
 function getApiKeys() {
   return new Promise((resolve) => {
-    chrome.storage.sync.get(["openaiApiKey", "geminiApiKey", "anthropicApiKey", "basePrompt"], resolve);
+    chrome.storage.sync.get(["htmlMode", "openaiApiKey", "geminiApiKey", "anthropicApiKey", "basePrompt"], resolve);
   });
 }
 
@@ -120,12 +122,23 @@ function getChatHistory() {
   });
 }
 
-function generatePrompt(content, basePrompt) {
+function generatePrompt(htmlMode, content, basePrompt) {
+  const contentSection = htmlMode === "markdown"
+    ? `
+# **Markdown Representation:**
+[start]
+${content}
+[end]
+    `.trim()
+    : `
+# **Compressed HTML Representation:**
+${content}
+    `.trim()
+
   return `
 ${SYSTEM_PROMPT}
 
-# **Compressed HTML Representation:**
-${content}
+${contentSection}
 
 # **Custom Instructions:**
 ${basePrompt}

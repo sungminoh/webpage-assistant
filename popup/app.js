@@ -7,7 +7,7 @@ import { DomSelectManager } from "../src/domSelectManager.js";
 
 const DOMElements = {
   chatBox: document.getElementById("chat"),
-  htmlBox: document.getElementById("html-box"),
+  htmlBoxContainer: document.getElementById("html-box-container"),
   modelSelect: document.getElementById("modelSelect"),
   customPromptInput: document.getElementById("customPrompt"),
   savePromptBtn: document.getElementById("savePromptBtn"),
@@ -80,7 +80,7 @@ function handleIncomingMessages(message) {
 
 /** DOM 선택 기능 초기화 */
 function initializeDomSelector() {
-  domSelectManager = new DomSelectManager(DOMElements.htmlBox);
+  domSelectManager = new DomSelectManager(DOMElements.htmlBoxContainer);
   DOMElements.activateSelectionBtn.addEventListener("click", domSelectManager.toggle.bind(domSelectManager));
 }
 
