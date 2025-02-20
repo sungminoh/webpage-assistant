@@ -1,6 +1,5 @@
 // background.js
 import { injectScript } from "./src/domSelectManager.js";
-import { convertDomToCleanCompressedJson } from "./src/utils/htmlUtils.js";
 
 const SYSTEM_PROMPT = `
 You are an AI assistant specialized in analyzing compressed HTML structures to extract and summarize the most **informative, detailed, and functionally useful content** from a given webpage. 
@@ -80,11 +79,10 @@ chrome.commands.onCommand.addListener(async (command) => {
     chrome.action.openPopup();
   } else if (command === "toggle_selector") {
     await injectScript(3000);
-    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-      const tab = tabs[0];
-      chrome.tabs.sendMessage(tab.id, {
-        action: "toggle_dom_selector"
-      });
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab) return;
+    chrome.tabs.sendMessage(tab.id, {
+      action: "toggle_dom_selector"
     });
   }
 });
@@ -159,7 +157,7 @@ function generatePrompt(content, basePrompt) {
 ${SYSTEM_PROMPT}
 
 # **Compressed HTML Representation:**
-${convertDomToCleanCompressedJson(content)}
+${content}
 
 # **Custom Instructions:**
 ${basePrompt}

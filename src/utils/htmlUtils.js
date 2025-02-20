@@ -109,12 +109,19 @@ function convertDomToJson(node) {
 }
 
 
+function createElementFromHTML(htmlString) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
+    return doc.body.firstElementChild; // Return the first element
+}
+
 /**
  * Full pipeline: cleans, compresses, converts to structure, and JSON-encodes.
  * @param {HTMLElement} dom
  * @returns {string} JSON string representing the DOM structure.
  */
-export function convertDomToCleanCompressedJson(dom) {
+export function convertHtmlToCleanCompressedJson(html) {
+    const dom = createElementFromHTML(html)
     const cleaned = cleanDom(dom);
     const compressed = compressDom(cleaned);
     const json = convertDomToJson(compressed);

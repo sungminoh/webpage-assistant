@@ -2,9 +2,17 @@
 import { StorageHelper } from "./storageHelper.js";
 import { chatManager } from "./chatManager.js";
 import { ModelManager } from "./modelManager.js";
+import { convertHtmlToCleanCompressedJson } from "../src/utils/htmlUtils.js";
 
 class ContentProcessor {
-  static async submitPrompt(prompt) {
+  constructor() {
+    if (ContentProcessor.instance) {
+      return ContentProcessor.instance;
+    }
+    ContentProcessor.instance = this;
+  }
+
+  async submitPrompt(prompt) {
     if (!prompt) return;
 
     const model = ModelManager.getSelectedModel();
@@ -22,30 +30,17 @@ class ContentProcessor {
     const { selectedHTML } = await StorageHelper.get("selectedHTML");
 
     if (selectedHTML) {
+      const cleanCompressedJson = convertHtmlToCleanCompressedJson(selectedHTML);
       chrome.runtime.sendMessage({
         action: "ask_ai",
-        content: selectedHTML,
+        content: JSON.stringify(cleanCompressedJson),
         model,
         prompt
-      })
-    } else {
-      // Otherwise, inject a script into the active tab so that we can access document.body.
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tabs.length === 0) return;
-      chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
-        function: (prompt, model) => chrome.runtime.sendMessage({
-          action: "ask_ai",
-          content: document.body.outerHTML,
-          model,
-          prompt
-        }),
-        args: [prompt, model]
       });
     }
   }
 
-  static async validateApiKey(model) {
+  async validateApiKey(model) {
     const keyMap = {
       openai: "openaiApiKey",
       gemini: "geminiApiKey",
@@ -66,4 +61,4 @@ class ContentProcessor {
 }
 
 
-export { ContentProcessor };
+export const contentProcessor = new ContentProcessor();

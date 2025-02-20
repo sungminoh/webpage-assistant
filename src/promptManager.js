@@ -1,7 +1,7 @@
 // src/promptManager.js
 import { StorageHelper } from "./storageHelper.js";
 import { UIHelper } from "./uiHelper.js";
-import { ContentProcessor } from "./contentProcessor.js";
+import { contentProcessor } from "./contentProcessor.js";
 
 class PromptManager {
   static async renderList(prompts) {
@@ -38,7 +38,7 @@ class PromptManager {
         const customPromptInput = document.getElementById("customPrompt");
         if (customPromptInput) customPromptInput.value = prompts[index];
         // Submit the prompt when clicked
-        ContentProcessor.submitPrompt(prompts[index]);
+        contentProcessor.submitPrompt(prompts[index]);
       });
     });
   }

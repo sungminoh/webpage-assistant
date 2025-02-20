@@ -3,7 +3,7 @@ import { StorageHelper } from "../src/storageHelper.js";
 import { chatManager } from "../src/chatManager.js";
 import { ModelManager } from "../src/modelManager.js";
 import { PromptManager } from "../src/promptManager.js";
-import { ContentProcessor } from "../src/contentProcessor.js";
+import { contentProcessor } from "../src/contentProcessor.js";
 import { DomSelectManager } from "../src/domSelectManager.js";
 
 // DOM 요소들을 한 곳에서 관리
@@ -84,8 +84,8 @@ function setupEventListeners() {
 function submitPrompt() {
   const prompt = DOMElements.customPromptInput.value.trim();
   if (prompt) {
-    // ContentProcessor가 프롬프트 제출 및 API 호출, 채팅 UI 업데이트를 처리
-    ContentProcessor.submitPrompt(prompt);
+    // contentProcessor가 프롬프트 제출 및 API 호출, 채팅 UI 업데이트를 처리
+    contentProcessor.submitPrompt(prompt);
     DOMElements.customPromptInput.value = "";
   }
 }
