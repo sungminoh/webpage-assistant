@@ -160,7 +160,6 @@ section {
 /* ===== HTML Preview Area (Markdown Rendering) ===== */
 /* HTML Preview Area */
 .html-container {
-  display: none;
   position: relative; /* Establishes a containing block for absolute positioning */
   font-family: var(--code-font);
   color: var(--text-color);

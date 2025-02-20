@@ -2,32 +2,51 @@
 import { StorageHelper } from "./storageHelper.js";
 import { UIHelper } from "./uiHelper.js";
 
-export function injectScript() {
-  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-    if (!tabs.length) return; // No active tab found.
-    // Check if DomSelector already exists in the tab
-    const tab = tabs[0];
-    const [{ result: isDomDefined }] = await chrome.scripting.executeScript({
+export async function injectScript(timeout) {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  if (!tab) return; // No active tab found.
+
+  // Check if the script is already injected
+  const [{ result: isInjected }] = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: () => typeof window.DomSelector !== "undefined",
+    func: () => !!window.__content_script_injected
     });
 
-    if (isDomDefined) {
-      console.debug("DomSelector is already injected.");
-    } else {
-      console.debug("Injecting content script...");
+  if (!isInjected) {
+    console.debug(`[${new Date().toISOString()}] Injecting content script...`);
       chrome.scripting.executeScript({
         target: { tabId: tab.id },
         files: ["content/content.js"],
-      });
+    })
       chrome.scripting.insertCSS({
         target: { tabId: tab.id },
         files: ["content/content.css"]
-      });
-    }
+    })
+    // Set a flag in the page's window object to prevent reinjection
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => { window.__content_script_injected = true; }
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    if (isInjected) resolve();
+
+    const listener = (message, sender) => {
+      if (message.action === "dom_selector_ready") {
+        chrome.runtime.onMessage.removeListener(listener);
+        resolve();
+}
+    };
+    chrome.runtime.onMessage.addListener(listener);
+    // Set a timeout to avoid waiting indefinitely.
+    setTimeout(() => {
+      chrome.runtime.onMessage.removeListener(listener);
+      reject(new Error("Timeout. DomSelector is not ready."));
+    }, timeout);
   });
 }
-
 
 class DomSelectManager {
   constructor(htmlBox) {
@@ -35,8 +54,9 @@ class DomSelectManager {
     this.htmlBox = htmlBox;
     this.htmlContainer = htmlBox?.parentElement;
     this.buttons = this.htmlContainer.querySelector(".html-box-buttons")
-    this.visible = false;
+    this.active = false;
     this.setupCopyHtmlButton(); // Initialize copy button click event
+    this.load();
   }
 
   setupCopyHtmlButton() {
@@ -44,16 +64,15 @@ class DomSelectManager {
   }
 
   toggle() {
-    this.setActive(!this.visible);
-    if (this.visible) {
+    this.setActive(!this.active);
+    if (this.active) {
       window.close();
     }
   }
 
   async setActive(active) {
-    this.visible = active;
+    this.active = active;
     this.updateButtonState();
-    await this.toggleVisibility(active);
     if (!active) {
       await this.clearSelectedHTML();
     }
@@ -72,8 +91,8 @@ class DomSelectManager {
 
     const btn = document.getElementById("activateSelectionBtn");
     if (btn) {
-      btn.innerHTML = this.visible ? activateIcon : deactivateIcon;
-      btn.classList.toggle("highlight", this.visible);
+      btn.innerHTML = this.active ? activateIcon : deactivateIcon;
+      btn.classList.toggle("highlight", this.active);
     }
   }
 
@@ -90,27 +109,11 @@ class DomSelectManager {
       if (tabs.length === 0) return;
       chrome.tabs.sendMessage(tabs[0].id, {
         action: "toggle_dom_selector",
-        active: this.visible
       });
     });
   }
 
-  async toggleVisibility(forceVisibility) {
-    if (forceVisibility === undefined || forceVisibility === null) {
-      this.visible = !this.visible;
-    } else {
-      this.visible = forceVisibility;
-    }
-    if (this.htmlContainer) {
-      if (this.visible) {
-        UIHelper.showElementWithFade(this.htmlContainer);
-      } else {
-        UIHelper.hideElementWithFade(this.htmlContainer);
-      }
-    }
-  }
-
-  render() {
+  load() {
     StorageHelper.get(["selectedHTML", "selectedCSS"], "local").then(({ selectedHTML, selectedCSS }) => {
       if (selectedHTML?.trim()) {
         if (this.htmlBox) {

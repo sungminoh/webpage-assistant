@@ -74,16 +74,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Listen for commands.
-chrome.commands.onCommand.addListener((command) => {
+chrome.commands.onCommand.addListener(async (command) => {
   if (command === "open_popup") {
     chrome.action.openPopup();
   } else if (command === "toggle_selector") {
-    injectScript();
+    await injectScript(3000);
     chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
       const tab = tabs[0];
       chrome.tabs.sendMessage(tab.id, {
-        action: "toggle_dom_selector",
-        active: true
+        action: "toggle_dom_selector"
       });
     });
   }

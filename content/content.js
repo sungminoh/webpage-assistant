@@ -27,23 +27,25 @@ chrome.storage.onChanged.addListener((changes) => {
   }
 });
 
-class DomSelector {
-  constructor() {
-    this.selectionActive = false;
-    this.selectedElement = null;
-    this.currentElement = null;
-    this.createOverlay();
-    this.createEscMenu();
-    this.attachEventListeners();
-  }
+if (!window.DomSelector) {
+  class DomSelector {
+    constructor() {
+      this.selectionActive = false;
+      this.selectedElement = null;
+      this.currentElement = null;
+      this.createOverlay();
+      this.createEscMenu();
+      this.attachEventListeners();
+      chrome.runtime.sendMessage({ action: "dom_selector_ready" });
+    }
 
-  reset() {
-    this.selectionActive = false;
-    this.clearBoundary(this.selectedElement);
-    this.selectedElement = null;
-    this.clearBoundary(this.currentElement);
-    this.currentElement = null;
-    chrome.runtime.sendMessage({ action: "click_target_dom", html: undefined, css: undefined });
+    reset() {
+      this.selectionActive = false;
+      this.clearBoundary(this.selectedElement);
+      this.selectedElement = null;
+      this.clearBoundary(this.currentElement);
+      this.currentElement = null;
+      chrome.runtime.sendMessage({ action: "click_target_dom", html: undefined, css: undefined });
     this.overlay.style.display = "none";
     this.escMenu.style.display = "none";
   }
@@ -57,7 +59,7 @@ class DomSelector {
 
   handleToggleMessage(message, sender, sendResponse) {
     if (message.action === "toggle_dom_selector") {
-      this.selectionActive = message.active;
+        this.selectionActive = !this.selectionActive;
       if (this.selectionActive) {
         this.overlay.style.display = "block";
         this.escMenu.style.display = "block";
@@ -161,4 +163,5 @@ class DomSelector {
 }
 
 
-const domSelector = new DomSelector();
+  window.domSelector = new DomSelector();
+}

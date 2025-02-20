@@ -132,7 +132,6 @@ function handleIncomingMessages(message) {
 function initializeDomSelector() {
   console.debug("initializeDomSelector")
   domSelectManager = new DomSelectManager(DOMElements.htmlBox);
-  domSelectManager.render();
   DOMElements.activateSelectionBtn.addEventListener("click", domSelectManager.toggle.bind(domSelectManager));
 }
 
