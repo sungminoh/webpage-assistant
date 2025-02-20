@@ -2,16 +2,16 @@ import { StorageHelper } from "./storageHelper.js";
 import { UIHelper } from "./uiHelper.js";
 import { marked } from "../libs/marked.min.js";
 
-export class ChatManager {
+class ChatManager {
   constructor(chatBox) {
     if (!chatBox) throw new Error("ChatManager requires a valid chatBox element.");
 
     this.chatBox = chatBox;
     this.chatContainer = chatBox.parentElement;
     this.buttons = this.chatContainer.querySelector(".chat-box-buttons");
-    this.messages = []; // Store chat messages in an array
+    this.messages = [];
     this.visible = false;
-    this.currentAiMessageIndex = null; // Track the latest AI message for streaming updates
+    this.currentAiMessageIndex = null;
   }
 
   init() {
@@ -32,7 +32,9 @@ export class ChatManager {
 
   toggleVisibility(forceVisibility) {
     this.visible = forceVisibility ?? !this.visible;
-    this.visible ? UIHelper.showElementWithFade(this.chatContainer) : UIHelper.hideElementWithFade(this.chatContainer);
+    this.visible
+      ? UIHelper.showElementWithFade(this.chatContainer)
+      : UIHelper.hideElementWithFade(this.chatContainer);
   }
 
   scrollToBottom(alwaysScroll = false) {
@@ -43,7 +45,7 @@ export class ChatManager {
 
   async loadChatHistory() {
     const { chatHistory, chatScrollPosition } = await StorageHelper.get(["chatHistory", "chatScrollPosition"]);
-    if (Array.isArray(chatHistory) && chatHistory.length > 0) {
+    if (Array.isArray(chatHistory) && chatHistory.length) {
       this.messages = chatHistory;
       this.renderChat();
       this.toggleVisibility(true);
@@ -88,11 +90,7 @@ export class ChatManager {
     this.renderChat();
   }
 
-  /**
-   * **Fixes streaming updates to correctly append to the latest AI message.**
-   */
   appendToLastAiMessage(chunk) {
-    // Ensure the AI message exists for streaming
     if (this.currentAiMessageIndex === null || this.messages[this.currentAiMessageIndex]?.sender !== "AI") {
       this.removePlaceholder();
       this.currentAiMessageIndex = this.messages.length;
@@ -126,9 +124,6 @@ export class ChatManager {
     this.currentAiMessageIndex = null;
   }
 
-  /**
-   * **Fix: Ensure messages are correctly indexed when rendering**
-   */
   renderChat() {
     this.chatBox.innerHTML = "";
 
@@ -137,10 +132,9 @@ export class ChatManager {
       li.classList.add(sender === "AI" ? "ai-message" : "user-message");
       if (isPlaceholder) li.classList.add("placeholder");
 
-      const messageHtml = marked.parse(text);
       li.innerHTML = `
         <div>
-          <span class="message-text html-content">${messageHtml}</span>
+          <span class="message-text html-content">${marked.parse(text)}</span>
           ${usage ? this.createUsageInfo(usage) : ""}
         </div>
         <div class="button-container"></div>
@@ -151,7 +145,7 @@ export class ChatManager {
         const deleteButton = UIHelper.createDeleteButton();
         deleteButton.addEventListener("click", () => {
           this.messages.splice(index, 1);
-          if (this.currentAiMessageIndex !== null && index >= 0 && this.currentAiMessageIndex > index) {
+          if (this.currentAiMessageIndex !== null && index < this.currentAiMessageIndex) {
             this.currentAiMessageIndex--;
           }
           this.saveChatHistory();
@@ -159,15 +153,14 @@ export class ChatManager {
         });
 
         const copyButton = UIHelper.createCopyButton(null, text);
-        buttonContainer.appendChild(deleteButton);
-        buttonContainer.appendChild(copyButton);
+        buttonContainer.append(deleteButton, copyButton);
       }
 
       this.chatBox.appendChild(li);
     });
 
     this.scrollToBottom();
-    this.saveChatHistory();
+   this.saveChatHistory();
   }
 
   createUsageInfo({ inputTokens, outputTokens, totalPrice }) {

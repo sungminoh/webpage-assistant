@@ -52,7 +52,6 @@ Your goal is to help users **quickly absorb the essential information from a web
 *"The Samsung Galaxy S24 features a 6.7-inch AMOLED display, Snapdragon 8 Gen 3 chip, and a 50MP main camera. It supports 5G and has a 4,800mAh battery. The base model starts at $999. Key selling points include AI-enhanced photography and a 120Hz refresh rate."*
 `.trim();
 
-// Single onMessage listener handling multiple actions.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.action) {
     case "ask_ai":
@@ -68,90 +67,59 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case "open_popup":
       chrome.action.openPopup();
       break;
-    default:
-      console.warn("Unknown message action:", message.action);
   }
 });
 
-// Listen for commands.
 chrome.commands.onCommand.addListener(async (command) => {
-  if (command === "open_popup") {
-    chrome.action.openPopup();
-  } else if (command === "toggle_selector") {
+  if (command === "open_popup") chrome.action.openPopup();
+  else if (command === "toggle_selector") {
     await injectScript(3000);
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab) return;
-    chrome.tabs.sendMessage(tab.id, {
-      action: "toggle_dom_selector"
-    });
+    chrome.tabs.sendMessage(tab.id, { action: "toggle_dom_selector" });
   }
 });
 
-// On installation, set a default model.
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.set({ selectedModel: "gpt-4o" });
 });
 
-
-/**
- * Handles the AI request by gathering API keys, generating a prompt,
- * retrieving chat history, and calling the appropriate AI model.
- */
 async function handleAiRequest(request) {
   try {
     const { openaiApiKey, anthropicApiKey, geminiApiKey, basePrompt } = await getApiKeys();
     const { type: modelType, name: modelName } = request.model;
     const apiKey =
-      modelType === "openai"
-        ? openaiApiKey
-        : modelType === "anthropic"
-        ? anthropicApiKey
-        : modelType === "gemini"
-        ? geminiApiKey
-        : null;
+      modelType === "openai" ? openaiApiKey :
+      modelType === "anthropic" ? anthropicApiKey :
+      modelType === "gemini" ? geminiApiKey :
+      null;
 
-    if (!apiKey) {
-      return handleError("API Key is missing.");
-    }
+    if (!apiKey) throw new Error("API Key is missing.");
 
     const prompt = generatePrompt(request.content, basePrompt);
     const chatHistory = await getChatHistory();
-
-    console.log(prompt);
     const summary = await callModelApi(modelType, modelName, apiKey, prompt, chatHistory);
+
     chrome.runtime.sendMessage({ action: "response_result", summary });
   } catch (error) {
     handleError("Error: Failed to fetch summary.", error);
   }
 }
 
-/**
- * Returns API keys and the base prompt from storage.
- */
 function getApiKeys() {
   return new Promise((resolve) => {
-    chrome.storage.sync.get(
-      ["openaiApiKey", "geminiApiKey", "anthropicApiKey", "basePrompt"],
-      resolve
-    );
+    chrome.storage.sync.get(["openaiApiKey", "geminiApiKey", "anthropicApiKey", "basePrompt"], resolve);
   });
 }
 
-/**
- * Returns the chat history from local storage, filtering out placeholders.
- */
 function getChatHistory() {
   return new Promise((resolve) => {
     chrome.storage.local.get(["chatHistory"], (data) => {
-      const chatHistory = data.chatHistory || [];
-      resolve(chatHistory.filter((msg) => !msg.isPlaceholder));
+      resolve(data.chatHistory?.filter((msg) => !msg.isPlaceholder) || []);
     });
   });
 }
 
-/**
- * Generates the final prompt for the AI model.
- */
 function generatePrompt(content, basePrompt) {
   return `
 ${SYSTEM_PROMPT}
@@ -164,9 +132,6 @@ ${basePrompt}
   `.trim();
 }
 
-/**
- * Calls the appropriate AI model API.
- */
 async function callModelApi(modelType, modelName, apiKey, prompt, chatHistory) {
   switch (modelType) {
     case "openai":
@@ -180,9 +145,6 @@ async function callModelApi(modelType, modelName, apiKey, prompt, chatHistory) {
   }
 }
 
-/**
- * Logs errors and sends an error message via runtime.
- */
 function handleError(message, error = null) {
   console.error(message, error || "");
   if (error) {
