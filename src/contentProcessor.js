@@ -29,7 +29,6 @@ class ContentProcessor {
     const content = htmlMode == "markdown"
       ? turndownService.turndown(selectedHTML)
       : JSON.stringify(convertHtmlToCleanCompressedJson(selectedHTML));
-    debugger;
     chrome.runtime.sendMessage({
       action: "ask_ai",
       content,
