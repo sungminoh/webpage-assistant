@@ -63,7 +63,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         StorageHelper.set({
           "domSelection": {
             ...domSelection,
-            [message.url]: message
+            [sender.tab.id]: message
           }
         });
       });

@@ -126,8 +126,8 @@ class DomSelectManager {
 
   async setActive(active) {
     this.active = active;
-    const url = await getUrl();
-    StorageHelper.update({ "domSelection": { [url]: { active: this.active } } }, "local");;
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+    StorageHelper.update({ "domSelection": { [tab.id]: { active: this.active } } }, "local");;
     this.updateButtonState();
   }
 
@@ -157,8 +157,8 @@ class DomSelectManager {
 
   load() {
     StorageHelper.get(["domSelection"], "local").then(async ({ domSelection }) => {
-      const url = await getUrl()
-      const { active, html, css } = domSelection[url] || {};
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+      const { active, html, css } = domSelection[tab.id] || {};
       const { htmlMode } = await StorageHelper.get("htmlMode", "sync")
       if (html?.trim()) {
         this.originalHtml = html;
