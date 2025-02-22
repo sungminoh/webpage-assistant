@@ -135,11 +135,11 @@ class ChatManager {
 
     this.messages.forEach(({ sender, text, usage, isPlaceholder }, index) => {
       const li = document.createElement("li");
-      li.classList.add(sender === "AI" ? "ai-message" : "user-message");
+      li.classList.add("message", sender === "AI" ? "ai-message" : "user-message");
       if (isPlaceholder) li.classList.add("placeholder");
 
       li.innerHTML = `
-        <div>
+        <div class="message-text-container">
           <span class="message-text html-content">${marked.parse(text)}</span>
           ${usage ? this.createUsageInfo(usage) : ""}
         </div>

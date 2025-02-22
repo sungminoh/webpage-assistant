@@ -148,7 +148,7 @@ body {
 
 .container {
   background-color: var(--container-bg);
-  padding: 10px;
+  padding: 5px;
   width: var(--container-width);
   box-sizing: border-box;
   border-radius: 4px;
@@ -157,7 +157,7 @@ body {
 section {
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  padding: 6px;
+  padding: 4px;
   background-color: var(--container-bg);
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   box-sizing: border-box;
@@ -167,8 +167,8 @@ section {
 /* HTML Preview Area */
 .html-container {
   position: relative; /* Establishes a containing block for absolute positioning */
-  padding: 8px;            /* Reduced padding */
-  margin-bottom: 8px;
+  padding: 4px;            /* Reduced padding */
+  margin-bottom: 4px;
 }
 
 .html-box-container{
@@ -188,13 +188,13 @@ section {
   font-size: var(--font-size);
   line-height: 1.2;
   margin: 0px;
+  padding: 0px;
 }
 
 .html-content h1,
 .html-content h2,
 .html-content h3 {
   color: var(--primary-color);
-  /* margin: 0.3em 0; */
   font-weight: 600;
 }
 
@@ -248,7 +248,7 @@ section {
   max-height: 400px;
   overflow-y: auto;
   padding: 8px;
-  margin-bottom: 0px;
+  margin: 0px;
 }
 
 /* ===== Page Fold Effect Using Theme Variables ===== */
@@ -364,24 +364,33 @@ section {
   opacity: 1;
 }
 
+.message {
+  max-width: 70%;
+}
+
+.message-text-container {
+  display: flex;
+  flex-direction: column;
+}
+
 .user-message {
   background-color: var(--primary-color);
   color: #fff;
   margin-left: auto;
-  max-width: 70%;
 }
 
 .ai-message {
   background-color: var(--ai-bg);
   color: var(--text-color);
   margin-right: auto;
-  max-width: 70%;
 }
+
 
 .message-text {
   word-wrap: break-word;
   white-space: pre-wrap;
   padding: 6px;
+  margin: 0; /* 내부 여백 제거 */
 }
 
 .usage-info {
@@ -411,10 +420,10 @@ section {
 .input-container {
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  padding: 6px;
+  padding: 4px;
   background-color: var(--container-bg);
   box-sizing: border-box;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 textarea {
@@ -447,9 +456,9 @@ textarea:focus {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 6px;
+  margin-top: 3px;
   border-top: 1px solid var(--border-color);
-  padding-top: 4px;
+  padding-top: 2px;
 }
 
 /* Left controls */
