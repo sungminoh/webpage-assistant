@@ -181,59 +181,7 @@ section {
   white-space: pre-wrap;
 }
 
-/* Compact HTML Content Styling */
-/* Ultra Compact HTML Content Styling */
-.html-content * {
-  all: revert;
-  font-size: var(--font-size);
-  line-height: 1.2;
-  margin: 0px;
-  padding: 0px;
-}
 
-.html-content h1,
-.html-content h2,
-.html-content h3 {
-  color: var(--primary-color);
-  font-weight: 600;
-}
-
-.html-content p {
-  font-size: var(--font-size);
-  /* margin: 0.2em 0; 더 타이트한 간격 */
-}
-
-.html-content code {
-  background-color: var(--code-bg);
-  padding: 1px 2px;
-  border-radius: 2px;
-  font-family: var(--code-font);
-  font-size: var(--font-size);
-}
-
-.html-content pre {
-  background-color: var(--code-bg);
-  padding: 2px;
-  border-radius: 2px;
-  overflow-x: auto;
-  font-family: var(--code-font);
-  font-size: var(--font-size);
-  /* margin: 0.3em 0; 줄 간격 최소화 */
-}
-
-.html-content blockquote {
-  border-left: 2px solid var(--primary-color);
-  padding-left: 2px;
-  color: var(--secondary-text-color);
-  /* margin: 0.2em 0; */
-  font-style: italic;
-}
-
-.html-content ul,
-.html-content ol {
-  /* margin: 0.2em 0; */
-  padding-left: 1.2em; /* 리스트 들여쓰기 최소화 */
-}
 
 /* ===== 채팅 영역 ===== */
 .chat-container {
@@ -624,4 +572,116 @@ textarea:focus {
   #modelSelect {
     margin: 0;
   }
+}
+
+.html-content * {
+  all: revert;
+  font-size: var(--font-size);
+  line-height: 1.2; /* 줄 간격 최소화 */
+  margin: 0;
+  padding: 0;
+}
+
+/* 제목 스타일 */
+.html-content h1,
+.html-content h2,
+.html-content h3,
+.html-content h4,
+.html-content h5,
+.html-content h6 {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* 단락 스타일 */
+.html-content p {
+  font-size: var(--font-size);
+  line-height: 1.2;
+}
+
+/* 리스트 스타일 */
+.html-content ul,
+.html-content ol {
+  padding-left: 1.2em;
+}
+
+.html-content li {
+  line-height: 1.2;
+}
+
+/* 코드 블록 스타일 */
+.html-content code {
+  background-color: var(--code-bg);
+  padding: 1px 2px;
+  border-radius: 3px;
+  font-family: var(--code-font);
+}
+
+
+.html-content pre {
+  background-color: var(--code-bg);
+  padding: 3px;
+  border-radius: 3px;
+  overflow-x: auto;
+  font-family: var(--code-font);
+}
+
+/* 인용문 스타일 */
+.html-content blockquote {
+  border-left: 3px solid var(--primary-color);
+  padding-left: 4px;
+  color: var(--secondary-text-color);
+  font-style: italic;
+}
+
+/* 테이블 스타일 */
+.html-content table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.html-content th,
+.html-content td {
+  border: 1px solid var(--border-color);
+  padding: 2px 4px;
+  font-size: 12px;
+  text-align: left;
+}
+
+/* 이미지 스타일 */
+.html-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* 하이퍼링크 스타일 */
+.html-content a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.html-content a:hover {
+  text-decoration: underline;
+}
+
+/* 버튼 스타일 */
+.html-content button {
+  font-size: 12px;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+/* 표 스타일 */
+.html-content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.html-content th,
+.html-content td {
+  border: 1px solid var(--border-color);
+  padding: 2px 4px;
+  text-align: left;
 }
