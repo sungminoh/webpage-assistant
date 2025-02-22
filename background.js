@@ -60,7 +60,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break;
     case "change_selected_dom":
       StorageHelper.get("domSelection").then(({ domSelection }) => {
-        console.log(domSelection)
         StorageHelper.set({
           "domSelection": {
             ...domSelection,

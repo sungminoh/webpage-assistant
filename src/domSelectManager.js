@@ -126,7 +126,8 @@ class DomSelectManager {
 
   async setActive(active) {
     this.active = active;
-    await StorageHelper.set({ domSelectionActive: active }, "local");
+    const url = await getUrl();
+    StorageHelper.update({ "domSelection": { [url]: { active: this.active } } }, "local");;
     this.updateButtonState();
   }
 
@@ -147,12 +148,10 @@ class DomSelectManager {
     }
   }
 
-  sendToggleMessage() {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs.length === 0) return;
-      chrome.tabs.sendMessage(tabs[0].id, {
-        action: "toggle_dom_selector",
-      });
+  async sendToggleMessage() {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+    chrome.tabs.sendMessage(tab.id, {
+      action: "toggle_dom_selector",
     });
   }
 
