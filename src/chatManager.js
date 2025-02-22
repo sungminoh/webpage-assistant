@@ -3,12 +3,11 @@ import { UIHelper } from "./uiHelper.js";
 import { marked } from "../libs/marked.min.js";
 
 class ChatManager {
-  constructor(chatBox) {
+  constructor(chatBox, inputContainer) {
     if (!chatBox) throw new Error("ChatManager requires a valid chatBox element.");
-
     this.chatBox = chatBox;
     this.chatContainer = chatBox.parentElement;
-    this.buttons = this.chatContainer.querySelector(".chat-box-buttons");
+    this.inputContainer = inputContainer;
     this.messages = [];
     this.visible = false;
     this.currentAiMessageIndex = null;
@@ -33,8 +32,14 @@ class ChatManager {
   toggleVisibility(forceVisibility) {
     this.visible = forceVisibility ?? !this.visible;
     this.visible
-      ? UIHelper.showElementWithFade(this.chatContainer)
-      : UIHelper.hideElementWithFade(this.chatContainer);
+    if (this.visible) {
+      UIHelper.showElementWithFade(this.chatContainer)
+      this.inputContainer.style.borderRadius = "0 0 4px 4px";
+    } else {
+      UIHelper.hideElementWithFade(this.chatContainer);
+      this.inputContainer.style.borderRadius = "4px";
+      this.inputContainer.querySelector("textarea").focus();
+    }
   }
 
   scrollToBottom(alwaysScroll = false) {
@@ -174,4 +179,7 @@ class ChatManager {
   }
 }
 
-export const chatManager = new ChatManager(document.getElementById("chat"));
+export const chatManager = new ChatManager(
+  document.getElementById("chat"),
+  document.querySelector(".input-container"),
+);
