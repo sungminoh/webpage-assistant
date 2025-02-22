@@ -173,7 +173,7 @@ section {
 
 .html-box-container{
   overflow-y: auto;
-  max-height: 200px;       /* Slightly lower max height */
+  max-height: 50px;       /* Slightly lower max height */
 }
 
 .markdown-box {
@@ -414,6 +414,7 @@ section {
   padding: 6px;
   background-color: var(--container-bg);
   box-sizing: border-box;
+  margin-bottom: 8px;
 }
 
 textarea {

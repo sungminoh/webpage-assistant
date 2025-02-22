@@ -10,21 +10,6 @@
 
 <body>
   <div class="container">
-    <!-- HTML Preview Area (Markdown rendered) -->
-    <section class="html-container visible">
-      <div id="html-box-container" class="html-box-container">
-        <div class="html-box html-content"></div>
-        <div class="markdown-box html-content"></div>
-      </div>
-      <div class="bottom-bar">
-        <div class="left-controls">
-          <div class="html-box-buttons button-group"></div>
-        </div>
-        <div class="right-controls">
-          <div class="html-box-buttons button-group"></div>
-        </div>
-      </div>
-    </section>
 
     <!-- Chat Area -->
     <section class="chat-container hidden">
@@ -76,7 +61,10 @@
       <textarea id="customPrompt" placeholder="Enter your prompt..."></textarea>
       <div class="prompt-buttons button-group">
         <button id="savePromptBtn" class="icon-btn" aria-label="Save prompt">
-          <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px">
+            <path
+              d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z" />
+          </svg>
         </button>
         <button id="submitPromptBtn" class="icon-btn" aria-label="Send prompt">
           <svg xmlns="http://www.w3.org/2000/svg" height="18px" width="18px" viewBox="0 -960 960 960">
@@ -87,10 +75,27 @@
       </div>
     </section>
 
+    <!-- HTML Preview Area (Markdown rendered) -->
+    <section class="html-container visible">
+      <div id="html-box-container" class="html-box-container">
+        <div class="html-box html-content"></div>
+        <div class="markdown-box html-content"></div>
+      </div>
+      <div class="bottom-bar">
+        <div class="left-controls">
+          <div class="html-box-buttons button-group"></div>
+        </div>
+        <div class="right-controls">
+          <div class="html-box-buttons button-group"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- Prompt List -->
     <ul id="promptList">
       <!-- Prompt items will be dynamically added here -->
     </ul>
+
   </div>
   <script type="module" src="app.js"></script>
 </body>
