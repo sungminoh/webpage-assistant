@@ -575,7 +575,7 @@ textarea:focus {
 
 #promptList li {
   background-color: var(--container-bg);
-  padding: 6px 8px;
+  padding: 2px 2px;
   margin: 2px 0;
   border: 1px solid var(--border-color);
   border-radius: 3px;
