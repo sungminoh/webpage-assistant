@@ -7,6 +7,7 @@ class ChatManager {
     if (!chatBox) throw new Error("ChatManager requires a valid chatBox element.");
     this.chatBox = chatBox;
     this.chatContainer = chatBox.parentElement;
+    this.pageCorner = this.chatContainer.querySelector(".page-corner")
     this.inputContainer = inputContainer;
     this.messages = [];
     this.visible = false;
@@ -15,7 +16,7 @@ class ChatManager {
 
   init() {
     this.loadChatHistory();
-    this.buttons.appendChild(UIHelper.createClearButton(this.clearChat.bind(this)));
+    this.pageCorner.addEventListener("click", this.clearChat.bind(this));
   }
 
   clearChat() {
