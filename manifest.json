@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PageGenie: AI Web Assistant, Smart Page Summarizer & Data Extractor",
-  "version": "1.3",
+  "version": "1.4",
   "description": "A Chrome extension that uses AI to help you interact with web pages, extract insights, answer your questions, and more.",
   "permissions": [
     "activeTab",
