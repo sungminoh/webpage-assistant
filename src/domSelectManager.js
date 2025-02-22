@@ -53,6 +53,22 @@ export async function injectScript(timeout) {
   });
 }
 
+export async function getUrl(timeout) {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  if (!tab) return; // No active tab found.
+
+  // Set a flag in the page's window object to prevent reinjection
+  chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: () => { window.__content_script_injected = true; }
+  });
+  const [{ result: url }] = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: () => window.location.href
+  });
+  return url;
+}
 
 class DomSelectManager {
   constructor(htmlBoxContainer) {
@@ -141,25 +157,27 @@ class DomSelectManager {
   }
 
   load() {
-    StorageHelper.get(["domSelectionActive", "selectedHTML", "selectedCSS"], "local").then(async ({ domSelectionActive, selectedHTML, selectedCSS }) => {
+    StorageHelper.get(["domSelection"], "local").then(async ({ domSelection }) => {
+      const url = await getUrl()
+      const { active, html, css } = domSelection[url] || {};
       const { htmlMode } = await StorageHelper.get("htmlMode", "sync")
-      if (selectedHTML?.trim()) {
-        this.originalHtml = selectedHTML;
+      if (html?.trim()) {
+        this.originalHtml = html;
         if (htmlMode === "markdown") {
-          this.textToCopy = turndownService.turndown(selectedHTML);
+          this.textToCopy = turndownService.turndown(html);
           this.markdownBox.innerHTML = marked.parse(this.textToCopy);
           this.markdownBox.style.display = "block";
           this.htmlBox.style.display = "none";
         } else {
-          this.textToCopy = selectedHTML;
+          this.textToCopy = html;
           this.htmlBox.innerHTML = this.textToCopy;
-          if (selectedCSS?.trim()) {
-            this.htmlBox.style.cssText = selectedCSS;
+          if (css?.trim()) {
+            this.htmlBox.style.cssText = css;
           }
           this.htmlBox.style.display = "block";
           this.markdownBox.style.display = "none";
         }
-        this.setActive(domSelectionActive);
+        this.setActive(active);
       }
     });
   }

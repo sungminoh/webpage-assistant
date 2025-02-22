@@ -84,6 +84,7 @@ if (!window.DomSelector) {
       chrome.runtime.sendMessage({
         action: "change_selected_dom",
         active: this.selectionActive,
+        url: window.location.href,
         html: element.outerHTML,
         css: getCssText(element),
       });

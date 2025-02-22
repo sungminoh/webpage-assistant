@@ -1,5 +1,6 @@
 // background.js
 import { injectScript } from "./src/domSelectManager.js";
+import { StorageHelper } from "./src/storageHelper.js";
 
 const SYSTEM_PROMPT = `
 You are an AI assistant specialized in analyzing web page to extract and summarize the most **informative, detailed, and functionally useful content** from a given webpage. 
@@ -58,10 +59,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       handleAiRequest(message);
       break;
     case "change_selected_dom":
-      chrome.storage.local.set({
-        domSelectionActive: message.active,
-        selectedHTML: message.html,
-        selectedCSS: message.css,
+      StorageHelper.get("domSelection").then(({ domSelection }) => {
+        console.log(domSelection)
+        StorageHelper.set({
+          "domSelection": {
+            ...domSelection,
+            [message.url]: message
+          }
+        });
       });
       break;
     case "open_popup":
