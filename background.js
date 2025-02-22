@@ -125,13 +125,13 @@ function getChatHistory() {
 function generatePrompt(htmlMode, content, basePrompt) {
   const contentSection = htmlMode === "markdown"
     ? `
-# **Markdown Representation:**
+# **Web Page Content (Markdown):**
 [start]
 ${content}
 [end]
     `.trim()
     : `
-# **Compressed HTML Representation:**
+# **Web Page Content (Compressed HTML):**
 ${content}
     `.trim()
 
