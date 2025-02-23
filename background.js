@@ -1,5 +1,4 @@
-// background.js
-import { injectScript } from "./src/domSelectManager.js";
+import { injectScript } from "./src/utils/scriptUtils.js";
 import { StorageHelper } from "./src/storageHelper.js";
 
 const SYSTEM_PROMPT = `
@@ -84,9 +83,6 @@ chrome.commands.onCommand.addListener(async (command) => {
   }
 });
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.set({ selectedModel: "gpt-4o" });
-});
 
 async function handleAiRequest(request) {
   try {
@@ -484,3 +480,19 @@ async function callOllama(modelName, systemPrompt, userPrompt) {
   const data = await response.json();
   return new AiResponse(data.response, data.prompt_eval_count, data.eval_count);
 }
+
+
+
+// background.js
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.storage.sync.set({ selectedModel: "gpt-4o" });
+  console.log("Extension Installed or Updated!");
+});
+
+
+// // 개발 모드에서 자동 새로고침
+// if (chrome.runtime.id) {
+//   setInterval(() => {
+//     chrome.runtime.reload();
+//   }, 2000); // 2초마다 자동 리로드
+// }

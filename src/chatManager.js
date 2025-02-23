@@ -1,13 +1,15 @@
+// chatManager.js
+
 import { StorageHelper } from "./storageHelper.js";
 import { UIHelper } from "./uiHelper.js";
 import { marked } from "../libs/marked.min.js";
 
-class ChatManager {
+export class ChatManager {
   constructor(chatBox, inputContainer) {
     if (!chatBox) throw new Error("ChatManager requires a valid chatBox element.");
     this.chatBox = chatBox;
     this.chatContainer = chatBox.parentElement;
-    this.pageCorner = this.chatContainer.querySelector(".page-corner")
+    this.pageCorner = this.chatContainer.querySelector(".page-corner");
     this.inputContainer = inputContainer;
     this.messages = [];
     this.visible = false;
@@ -32,25 +34,34 @@ class ChatManager {
 
   toggleVisibility(forceVisibility) {
     this.visible = forceVisibility ?? !this.visible;
-    this.visible
+
     if (this.visible) {
-      UIHelper.showElementWithFade(this.chatContainer)
+      UIHelper.showElementWithFade(this.chatContainer);
       this.inputContainer.style.borderRadius = "0 0 4px 4px";
     } else {
       UIHelper.hideElementWithFade(this.chatContainer);
       this.inputContainer.style.borderRadius = "4px";
-      this.inputContainer.querySelector("textarea").focus();
+      const textarea = this.inputContainer.querySelector("textarea");
+      if (textarea) {
+        textarea.focus();
+      }
     }
   }
 
   scrollToBottom(alwaysScroll = false) {
-    const isAtBottom = this.chatBox.scrollHeight - this.chatBox.scrollTop <= 1.2 * this.chatBox.clientHeight;
-    if (alwaysScroll || isAtBottom) this.chatBox.scrollTop = this.chatBox.scrollHeight;
+    const isAtBottom =
+      this.chatBox.scrollHeight - this.chatBox.scrollTop <= 1.2 * this.chatBox.clientHeight;
+    if (alwaysScroll || isAtBottom) {
+      this.chatBox.scrollTop = this.chatBox.scrollHeight;
+    }
     this.saveScrollPosition();
   }
 
   async loadChatHistory() {
-    const { chatHistory, chatScrollPosition } = await StorageHelper.get(["chatHistory", "chatScrollPosition"]);
+    const { chatHistory, chatScrollPosition } = await StorageHelper.get([
+      "chatHistory",
+      "chatScrollPosition",
+    ]);
     if (Array.isArray(chatHistory) && chatHistory.length) {
       this.messages = chatHistory;
       this.renderChat();
@@ -73,7 +84,7 @@ class ChatManager {
   }
 
   removePlaceholder() {
-    this.messages = this.messages.filter(msg => !msg.isPlaceholder);
+    this.messages = this.messages.filter((msg) => !msg.isPlaceholder);
     this.renderChat();
   }
 
@@ -84,7 +95,12 @@ class ChatManager {
       this.messages[this.currentAiMessageIndex].text = text;
       if (usageInfo) this.messages[this.currentAiMessageIndex].usage = usageInfo;
     } else {
-      const newMessage = { sender, text, usage: usageInfo, isPlaceholder: options.isPlaceholder || false };
+      const newMessage = {
+        sender,
+        text,
+        usage: usageInfo,
+        isPlaceholder: options.isPlaceholder || false,
+      };
 
       if (sender === "AI" && !options.isPlaceholder) {
         this.currentAiMessageIndex = this.messages.length;
@@ -97,7 +113,10 @@ class ChatManager {
   }
 
   appendToLastAiMessage(chunk) {
-    if (this.currentAiMessageIndex === null || this.messages[this.currentAiMessageIndex]?.sender !== "AI") {
+    if (
+      this.currentAiMessageIndex === null ||
+      this.messages[this.currentAiMessageIndex]?.sender !== "AI"
+    ) {
       this.removePlaceholder();
       this.currentAiMessageIndex = this.messages.length;
       this.messages.push({ sender: "AI", text: chunk, isStreaming: true });
@@ -116,7 +135,7 @@ class ChatManager {
       usageInfo = {
         inputTokens: aiResponse.inputTokens,
         outputTokens: aiResponse.outputTokens,
-        totalPrice: model.getPrice(aiResponse.inputTokens, aiResponse.outputTokens)
+        totalPrice: model.getPrice(aiResponse.inputTokens, aiResponse.outputTokens),
       };
     }
 
@@ -166,7 +185,7 @@ class ChatManager {
     });
 
     this.scrollToBottom();
-   this.saveChatHistory();
+    this.saveChatHistory();
   }
 
   createUsageInfo({ inputTokens, outputTokens, totalPrice }) {

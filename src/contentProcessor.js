@@ -2,7 +2,7 @@ import { StorageHelper } from "./storageHelper.js";
 import { chatManager } from "./chatManager.js";
 import { ModelManager } from "./modelManager.js";
 import { convertHtmlToCleanCompressedJson } from "./utils/htmlUtils.js";
-import { TurndownService } from "../libs/turndown.js";
+import { TurndownService } from "../static/libs/turndown.js";
 
 const turndownService = new TurndownService()
 
