@@ -58,13 +58,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       handleAiRequest(message);
       break;
     case "change_selected_dom":
-      StorageHelper.get("domSelection").then(({ domSelection }) => {
-        StorageHelper.set({
-          "domSelection": {
-            ...domSelection,
-            [sender.tab.id]: message
-          }
-        });
+      StorageHelper.update({
+        domSelection: { [sender.tab.id]: message }
       });
       break;
     case "open_popup":

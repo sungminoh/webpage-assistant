@@ -106,7 +106,7 @@ class ModelManager {
     const modelSelect = document.getElementById("modelSelect");
     if (modelSelect) {
       modelSelect.classList.remove("error");
-      StorageHelper.set({ selectedModel: modelSelect.value });
+      StorageHelper.set({ selectedModel: modelSelect.value }, "sync");
     }
   }
 

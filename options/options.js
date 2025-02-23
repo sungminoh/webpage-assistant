@@ -21,12 +21,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Save settings (including the chosen theme) when the save button is clicked
   saveBtn.addEventListener("click", () => {
-    const openaiApiKey = openaiApiKeyInput.value.trim();
-    const geminiApiKey = geminiApiKeyInput.value.trim();
-    const anthropicApiKey = anthropicApiKeyInput.value.trim();
+    const apiKeys = {
+      openai: openaiApiKeyInput.value.trim(),
+      gemini: geminiApiKeyInput.value.trim(),
+      anthropic: anthropicApiKeyInput.value.trim()
+    }
     const basePrompt = basePromptInput.value.trim();
     const theme = themeSelect.value;
-    chrome.storage.sync.set({ openaiApiKey, anthropicApiKey, geminiApiKey, basePrompt, theme }, () => {
+    chrome.storage.sync.set({ apiKeys, basePrompt, theme }, () => {
       status.textContent = "Settings saved successfully!";
       status.style.color = "green";
       setTimeout(() => { status.textContent = ""; }, 3000);

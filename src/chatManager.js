@@ -2,7 +2,7 @@
 
 import { StorageHelper } from "./storageHelper.js";
 import { UIHelper } from "./uiHelper.js";
-import { marked } from "../libs/marked.min.js";
+// import { marked } from "../libs/marked.min.js";
 
 export class ChatManager {
   constructor(chatBox, inputContainer) {

@@ -1,0 +1,80 @@
+{
+    "openai_models": [
+        {
+            "type": "openai",
+            "name": "gpt-4o-mini",
+            "inputPrice": 0.15,
+            "outputPrice": 0.6
+        },
+        {
+            "type": "openai",
+            "name": "gpt-3.5-turbo",
+            "inputPrice": 2,
+            "outputPrice": 2
+        },
+        {
+            "type": "openai",
+            "name": "gpt-4o",
+            "inputPrice": 5,
+            "outputPrice": 15
+        },
+        {
+            "type": "openai",
+            "name": "o1-mini",
+            "inputPrice": 7.5,
+            "outputPrice": 30
+        },
+        {
+            "type": "openai",
+            "name": "o1-preview",
+            "inputPrice": 15,
+            "outputPrice": 60
+        }
+    ],
+    "gemini_models": [
+        {
+            "type": "gemini",
+            "name": "gemini-2.0-flash",
+            "inputPrice": 0.1,
+            "outputPrice": 0.4
+        },
+        {
+            "type": "gemini",
+            "name": "gemini-2.0-flash-lite",
+            "inputPrice": 0.075,
+            "outputPrice": 0.3
+        },
+        {
+            "type": "gemini",
+            "name": "gemini-1.5-pro",
+            "inputPrice": 0.3125,
+            "outputPrice": 5
+        },
+        {
+            "type": "gemini",
+            "name": "gemini-1.5-flash",
+            "inputPrice": 0.075,
+            "outputPrice": 0.3
+        }
+    ],
+    "anthropic_models": [
+        {
+            "type": "anthropic",
+            "name": "claude-3-5-haiku-20241022",
+            "inputPrice": 0.25,
+            "outputPrice": 1.25
+        },
+        {
+            "type": "anthropic",
+            "name": "claude-3-5-sonnet-20241022",
+            "inputPrice": 3,
+            "outputPrice": 15
+        },
+        {
+            "type": "anthropic",
+            "name": "claude-3-opus-20240229",
+            "inputPrice": 15,
+            "outputPrice": 75
+        }
+    ]
+}
