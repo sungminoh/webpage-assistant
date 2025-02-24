@@ -81,41 +81,24 @@ chrome.commands.onCommand.addListener(async (command) => {
 
 async function handleAiRequest(request) {
   try {
-    const { htmlMode, openaiApiKey, anthropicApiKey, geminiApiKey, basePrompt } = await getApiKeys();
+    const { apiKeys = {}, htmlMode, basePrompt } = await StorageHelper.get(["apiKeys", "htmlMode", "basePrompt"], "sync");
     const { type: modelType, name: modelName } = request.model;
-    const apiKey =
-      modelType === "openai" ? openaiApiKey :
-      modelType === "anthropic" ? anthropicApiKey :
-      modelType === "gemini" ? geminiApiKey :
-      null;
+    const apiKey = apiKeys[modelType];
 
-    if (!apiKey) return handleError("API Key is missing.");
+    if (!apiKey) return handleError(request, "API Key is missing.");
 
     const prompt = generatePrompt(htmlMode, request.content, basePrompt);
     console.debug(prompt)
-    const chatHistory = await getChatHistory();
+    const chatHistory = await StorageHelper.get(["chatHistory"])
+      .then(({ chatHistory }) => chatHistory.filter((msg) => !msg.isPlaceholder) || []);
     console.debug(chatHistory)
-    const summary = await callModelApi(modelType, modelName, apiKey, prompt, chatHistory);
-
-    chrome.runtime.sendMessage({ action: "response_result", summary });
+    const response = await callModelApi(modelType, modelName, apiKey, prompt, chatHistory);
+    chrome.runtime.sendMessage({ action: "response_result", response, request });
   } catch (error) {
-    handleError("Error: Failed to fetch summary.", error);
+    handleError(request, "Error: Failed to fetch summary.", error);
   }
 }
 
-function getApiKeys() {
-  return new Promise((resolve) => {
-    chrome.storage.sync.get(["htmlMode", "openaiApiKey", "geminiApiKey", "anthropicApiKey", "basePrompt"], resolve);
-  });
-}
-
-function getChatHistory() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get(["chatHistory"], (data) => {
-      resolve(data.chatHistory?.filter((msg) => !msg.isPlaceholder) || []);
-    });
-  });
-}
 
 function generatePrompt(htmlMode, content, basePrompt) {
   const contentSection = htmlMode === "markdown"
@@ -153,12 +136,12 @@ async function callModelApi(modelType, modelName, apiKey, prompt, chatHistory) {
   }
 }
 
-function handleError(message, error = null) {
+function handleError(request, message, error = null) {
   console.error(message, error || "");
   if (error) {
     message += `\n${error.stack || error}`;
   }
-  chrome.runtime.sendMessage({ action: "response_result", summary: message });
+  chrome.runtime.sendMessage({ action: "response_result", response: { content: message } }, request);
 }
 
 class AiResponse {
@@ -240,7 +223,7 @@ async function callOpenAI(apiKey, modelName, prompt, chatHistory, stream = false
               const parsed = JSON.parse(dataStr);
               // Each parsed chunk is expected to have a structure like:
               // { choices: [ { delta: { content: "..." } } ], usage: { prompt_tokens, completion_tokens } }
-             const delta = parsed.choices[0].delta;
+              const delta = parsed.choices[0].delta;
               const contentPart = delta?.content || "";
               fullContent += contentPart;
               // Send each chunk as a stream update message
@@ -480,7 +463,7 @@ async function callOllama(modelName, systemPrompt, userPrompt) {
 
 // background.js
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.set({ selectedModel: "gpt-4o" });
+  // chrome.storage.sync.set({ selectedModel: "gpt-4o" });
   console.log("Extension Installed or Updated!");
 });
 

@@ -24,20 +24,28 @@ export function useChat() {
         const handleMessage = (message) => {
             if (message.action === 'stream_update') {
                 setChatHistory((prev) => {
-                    const lastMessage = prev[prev.length - 1];
-                    if (lastMessage && lastMessage.sender === 'AI' && !lastMessage.isPlaceholder) {
+                    const messages = prev.filter((msg) => !msg.isPlaceholder);
+                    const lastMessage = messages[messages.length - 1];
+                    if (lastMessage && lastMessage.sender === 'AI') {
                         return [
-                            ...prev.slice(0, -1),
+                            ...messages.slice(0, -1),
                             { ...lastMessage, text: lastMessage.text + message.chunk },
                         ];
                     }
-                    return [...prev, { sender: 'AI', text: message.chunk }];
+                    return [...messages, { sender: 'AI', text: message.chunk }];
                 });
             } else if (message.action === 'response_result') {
                 setChatHistory((prev) => {
                     const lastIndex = prev.length - 1;
                     if (prev[lastIndex]?.isPlaceholder) prev.pop();
-                    return [...prev, { sender: 'AI', text: message.summary, usage: message.usageInfo }];
+                    const { content, inputTokens, outputTokens } = message.response;
+                    let usage = null;
+                    if (inputTokens != null && outputTokens != null) {
+                        const { inputPrice, outputPrice } = message.request.model;
+                        const totalPrice = ((inputPrice * inputTokens) + (outputPrice * outputTokens)) / 1000000;
+                        usage = { inputTokens, outputTokens, totalPrice };
+                    }
+                    return [...prev, { sender: 'AI', text: content, usage }];
                 });
             }
         };
@@ -46,7 +54,7 @@ export function useChat() {
     }, []);
 
     const addMessage = (sender, text, usageInfo = null, isPlaceholder = false) => {
-        setChatHistory((prev) => [...prev, { sender, text, usage: usageInfo, isPlaceholder }]);
+        setChatHistory((prev) => [...prev, { sender, text: text?.trim(), usage: usageInfo, isPlaceholder }]);
     };
 
     const clearChat = () => {
@@ -111,7 +119,7 @@ export function useDomSelection() {
         });
     };
 
-    return { active, selectedHTML, toggle };
+    return { selectModeActive: active, selectedHTML, toggleSelectMode: toggle };
 }
 
 
