@@ -23,29 +23,34 @@ export function useChat() {
     useEffect(() => {
         const handleMessage = (message) => {
             if (message.action === 'stream_update') {
+                const { chunk, id } = message;
                 setChatHistory((prev) => {
-                    const messages = prev.filter((msg) => !msg.isPlaceholder);
-                    const lastMessage = messages[messages.length - 1];
-                    if (lastMessage && lastMessage.sender === 'AI') {
-                        return [
-                            ...messages.slice(0, -1),
-                            { ...lastMessage, text: lastMessage.text + message.chunk },
-                        ];
-                    }
-                    return [...messages, { sender: 'AI', text: message.chunk }];
+                    return prev.map((msg) => {
+                        if (msg.sender === 'AI' && msg.id === id) {
+                            if (msg.isPlaceholder) {
+                                return { ...msg, text: chunk, usage, isPlaceholder: false };
+                            }
+                            return { ...msg, text: msg.text + chunk };
+                        }
+                        return msg;
+                    });
                 });
             } else if (message.action === 'response_result') {
+                const { response, id } = message;
                 setChatHistory((prev) => {
-                    const lastIndex = prev.length - 1;
-                    if (prev[lastIndex]?.isPlaceholder) prev.pop();
-                    const { content, inputTokens, outputTokens } = message.response;
-                    let usage = null;
-                    if (inputTokens != null && outputTokens != null) {
-                        const { inputPrice, outputPrice } = message.request.model;
-                        const totalPrice = ((inputPrice * inputTokens) + (outputPrice * outputTokens)) / 1000000;
-                        usage = { inputTokens, outputTokens, totalPrice };
-                    }
-                    return [...prev, { sender: 'AI', text: content, usage }];
+                    return prev.map((msg) => {
+                        if (msg.sender === 'AI' && msg.id === id) {
+                            const { content, inputTokens, outputTokens } = response;
+                            let usage = null;
+                            if (inputTokens != null && outputTokens != null) {
+                                const { inputPrice, outputPrice } = message.request.model;
+                                const totalPrice = ((inputPrice * inputTokens) + (outputPrice * outputTokens)) / 1000000;
+                                usage = { inputTokens, outputTokens, totalPrice };
+                            }
+                            return { ...msg, text: content, usage, isPlaceholder: false };
+                        }
+                        return msg;
+                    });
                 });
             }
         };
@@ -53,8 +58,12 @@ export function useChat() {
         return () => chrome.runtime.onMessage.removeListener(handleMessage);
     }, []);
 
-    const addMessage = (sender, text, usageInfo = null, isPlaceholder = false) => {
-        setChatHistory((prev) => [...prev, { sender, text: text?.trim(), usage: usageInfo, isPlaceholder }]);
+    const addMessage = (sender, text, usage = null, isPlaceholder = false) => {
+        const id = Date.now().toString(); // Simple unique ID; consider UUID for production
+        setChatHistory((prev) => [
+            ...prev,
+            { id, sender, text: text?.trim(), usage, isPlaceholder }]);
+        return id;
     };
 
     const clearChat = () => {

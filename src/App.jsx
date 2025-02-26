@@ -5,38 +5,44 @@ import { InputArea } from './InputArea';
 import { ModelSelector } from './ModelSelector';
 import { PromptList } from './PromptList';
 import { DomSelector } from './DomSelector';
-import { SettingsButton } from './SettingsButton';
 import { contentProcessor } from './contentProcessor'; // Keep existing singleton for now
 
 function App() {
   const { chatHistory, addMessage, clearChat } = useChat();
   const { models, selectedModel, setSelectedModel } = useModels();
   const { prompts, addPrompt, removePrompt, reorderPrompts } = usePrompts();
-  const { active, selectedHTML, toggle } = useDomSelection();
+  const { selectModeActive, selectedHTML, toggleSelectMode } = useDomSelection();
 
-  const handleSubmitPrompt = (prompt) => {
+  const handleSubmitMessage = (prompt) => {
     addMessage('User', prompt);
-    contentProcessor.submitPrompt(prompt, selectedModel, selectedHTML); // Reuse existing logic
+    const msgId = addMessage("AI", "AI is thinking...", null, true);
+    contentProcessor.submitPrompt(msgId, selectedModel, selectedHTML); // Reuse existing logic
   };
 
   const handleSavePrompt = (prompt) => {
     addPrompt(prompt);
   };
 
+  const modelSelector = <ModelSelector models={models} selectedModel={selectedModel} onSelect={setSelectedModel} />
+
   return (
     <ThemeProvider>
       <div className="app">
-        <ModelSelector models={models} selectedModel={selectedModel} onSelect={setSelectedModel} />
         <ChatBox messages={chatHistory} onClear={clearChat} />
-        <InputArea onSubmit={handleSubmitPrompt} onSave={handleSavePrompt} />
+        <InputArea
+          modelSelector={modelSelector}
+          onSubmit={handleSubmitMessage}
+          onSave={handleSavePrompt}
+          selectModeActive={selectModeActive}
+          onToggleSelectMode={toggleSelectMode}
+        />
         <PromptList
           prompts={prompts}
-          onSelect={handleSubmitPrompt}
+          onSelect={handleSubmitMessage}
           onDelete={removePrompt}
           onReorder={reorderPrompts}
         />
-        <DomSelector active={active} selectedHTML={selectedHTML} onToggle={toggle} />
-        <SettingsButton />
+        <DomSelector selectedHTML={selectedHTML} />
       </div>
     </ThemeProvider>
   );

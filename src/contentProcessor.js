@@ -1,28 +1,23 @@
 // contentProcessor.js
 import { StorageHelper } from './storageHelper'; // Assuming this is the storage utility
-// import { turndownService } from './turndownService'; // Assuming Markdown conversion utility
-import { convertHtmlToCleanCompressedJson } from './utils/htmlUtils'; // Assuming HTML processing utility
+import { convertHtmlToCleanCompressedJson } from './utils/htmlUtils';
+import TurndownService from 'turndown';
+
+turndown = new TurndownService();
 
 class ContentProcessor {
   // Validate API key for the selected model
-  async validateApiKey(selectedModel) {
+  async validateApiKey(model) {
     const { apiKeys = {} } = await StorageHelper.get("apiKeys", "sync");
-    const modelType = selectedModel.type;
+    const modelType = model.type;
     const apiKey = apiKeys[modelType];
     return !!apiKey; // Returns true if API key exists for the model type
   }
 
   // Submit prompt to the AI model
-  async submitPrompt(prompt, selectedModel, selectedHTML) {
-    // Basic validation
-    if (!prompt) {
-      console.log("No prompt provided.");
-      return;
-    }
-
+  async submitPrompt(id, model, html) {
     // Check if model is selected and API key is valid
-      debugger;
-    if (!selectedModel || !(await this.validateApiKey(selectedModel))) {
+    if (!model || !(await this.validateApiKey(model))) {
       console.log("Invalid model selection or missing API key.");
       return;
     }
@@ -31,19 +26,18 @@ class ContentProcessor {
     const { htmlMode = "html" } = await StorageHelper.get("htmlMode", "sync");
 
     // Prepare content based on htmlMode
-    let content;
-    if (htmlMode === "markdown") {
-      content = turndownService.turndown(selectedHTML || "");
-    } else {
-      content = JSON.stringify(convertHtmlToCleanCompressedJson(selectedHTML || ""));
-    }
+    const content = htmlMode === "markdown"
+      ? turndownService.turndown(html || "")
+      : JSON.stringify(convertHtmlToCleanCompressedJson(html || ""));
 
     // Send message to background script
     chrome.runtime.sendMessage({
       action: "ask_ai",
-      content,
-      model: selectedModel,
-      prompt,
+      id,
+      request: {
+        content,
+        model
+      }
     });
   }
 }

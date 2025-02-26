@@ -5,7 +5,7 @@ export function ModelSelector({ models, selectedModel, onSelect }) {
     };
 
     return (
-        <select value={selectedModel?.name || ''} onChange={handleChange}>
+        <select className="model-selector" value={selectedModel?.name || ''} onChange={handleChange}>
             {models.map((model) => (
                 <option key={model.name} value={model.name}>
                     {model.name} ({model.type} - {model.inputPrice === 0 ? 'Free' : `$${model.inputPrice}/M`})

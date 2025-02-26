@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { StorageHelper } from './storageHelper';
-// import { marked } from 'marked';
-// import TurndownService from 'turndown';
+import { marked } from "marked";
+import TurndownService from 'turndown';
 
-// const turndownService = new TurndownService();
+const turndownService = new TurndownService();
 
-export function DomSelector({ active, selectedHTML, onToggle }) {
+export function DomSelector({ selectedHTML }) {
   const [htmlMode, setHtmlMode] = useState('html');
 
   useEffect(() => {
@@ -16,12 +16,10 @@ export function DomSelector({ active, selectedHTML, onToggle }) {
     StorageHelper.set({ htmlMode }, "sync");
   }, [htmlMode]);
 
-//   const content = htmlMode === 'markdown' ? turndownService.turndown(selectedHTML) : selectedHTML;
-  const content = selectedHTML;
+  const content = htmlMode === 'markdown' ? turndownService.turndown(selectedHTML) : selectedHTML;
 
   return (
     <div className="dom-selector">
-      <button onClick={onToggle}>{active ? 'Deactivate' : 'Activate'} Selection</button>
       <div>
         <button onClick={() => setHtmlMode('html')}>HTML</button>
         <button onClick={() => setHtmlMode('markdown')}>Markdown</button>

@@ -52,98 +52,193 @@ Your goal is to help users **quickly absorb the essential information from a web
 *"The Samsung Galaxy S24 features a 6.7-inch AMOLED display, Snapdragon 8 Gen 3 chip, and a 50MP main camera. It supports 5G and has a 4,800mAh battery. The base model starts at $999. Key selling points include AI-enhanced photography and a 120Hz refresh rate."*
 `.trim();
 
+
+// Action handlers for runtime messages
+const actionHandlers = {
+  "ask_ai": handleAiRequest,
+  "change_selected_dom": handleChangeSelectedDom,
+  "open_popup": handleOpenPopup,
+};
+
+// Command handlers for keyboard shortcuts
+const commandHandlers = {
+  "open_popup": handleOpenPopupCommand,
+  "toggle_selector": handleToggleSelectorCommand,
+};
+
+// Message listener
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  switch (message.action) {
-    case "ask_ai":
-      handleAiRequest(message);
-      break;
-    case "change_selected_dom":
-      StorageHelper.update({
-        domSelection: { [sender.tab.id]: message }
-      });
-      break;
-    case "open_popup":
-      chrome.action.openPopup();
-      break;
+  const handler = actionHandlers[message.action];
+  if (handler) {
+    handler(message, sender);
+  } else {
+    console.warn(`No handler for action in background: ${message.action}`);
   }
 });
 
+// Command listener
 chrome.commands.onCommand.addListener(async (command) => {
-  if (command === "open_popup") chrome.action.openPopup();
-  else if (command === "toggle_selector") {
-    await injectScript(3000);
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab) return;
-    chrome.tabs.sendMessage(tab.id, { action: "toggle_dom_selector" });
+  const handler = commandHandlers[command];
+  if (handler) {
+    await handler();
+  } else {
+    console.warn(`No handler for command in background: ${command}`);
   }
 });
 
-
-async function handleAiRequest(request) {
+/**
+ * Handles "ask_ai" action by processing the AI request.
+ * @param {Object} message - The incoming message with request object.
+ */
+async function handleAiRequest(message, sender) {
+  const { id, request } = message;
   try {
-    const { apiKeys = {}, htmlMode, basePrompt } = await StorageHelper.get(["apiKeys", "htmlMode", "basePrompt"], "sync");
-    const { type: modelType, name: modelName } = request.model;
+    if (!id) throw new Error("Request ID is missing.");
+    const { content, model } = request;
+
+    const { apiKeys = {}, htmlMode, basePrompt } = await StorageHelper.get(
+      ["apiKeys", "htmlMode", "basePrompt"],
+      "sync"
+    );
+    const { type: modelType, name: modelName } = model || {};
     const apiKey = apiKeys[modelType];
 
-    if (!apiKey) return handleError(request, "API Key is missing.");
+    if (!apiKey) return handleError(id, request, "API Key is missing.");
 
-    const prompt = generatePrompt(htmlMode, request.content, basePrompt);
-    console.debug(prompt)
-    const chatHistory = await StorageHelper.get(["chatHistory"])
-      .then(({ chatHistory }) => chatHistory.filter((msg) => !msg.isPlaceholder) || []);
-    console.debug(chatHistory)
-    const response = await callModelApi(modelType, modelName, apiKey, prompt, chatHistory);
-    chrome.runtime.sendMessage({ action: "response_result", response, request });
+    const prompt = generatePrompt(htmlMode, content, basePrompt);
+    console.debug("Generated Prompt:", prompt);
+
+    const chatHistory = await StorageHelper.get(["chatHistory"]).then(
+      ({ chatHistory }) => chatHistory?.filter((msg) => !msg.isPlaceholder) || []
+    );
+    console.debug("Chat History:", chatHistory);
+
+    const response = await callModelApi(modelType, modelName, apiKey, prompt, chatHistory, id);
+    chrome.runtime.sendMessage({
+      action: "response_result",
+      response,
+      request,
+      id,
+    });
   } catch (error) {
-    handleError(request, "Error: Failed to fetch summary.", error);
+    handleError(id, request, "Error: Failed to fetch summary.", error);
   }
 }
 
+/**
+ * Updates DOM selection in storage.
+ * @param {Object} message - The DOM selection message.
+ * @param {Object} sender - The sender object with tab info.
+ */
+function handleChangeSelectedDom(message, sender) {
+  StorageHelper.update({
+    domSelection: { [sender.tab.id]: message },
+  });
+}
 
+/**
+ * Opens the extension popup.
+ */
+function handleOpenPopup() {
+  chrome.action.openPopup();
+}
+
+/**
+ * Command handler to open the popup.
+ */
+async function handleOpenPopupCommand() {
+  chrome.action.openPopup();
+}
+
+/**
+ * Command handler to toggle DOM selector.
+ */
+async function handleToggleSelectorCommand() {
+  await injectScript(3000);
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab) {
+    chrome.tabs.sendMessage(tab.id, { action: "toggle_dom_selector" });
+  }
+}
+
+/**
+ * Generates a formatted prompt based on content and mode.
+ * @param {string} htmlMode - The content mode ("markdown" or other).
+ * @param {string} content - The content to include.
+ * @param {string} basePrompt - Custom instructions.
+ * @returns {string} The formatted prompt.
+ */
 function generatePrompt(htmlMode, content, basePrompt) {
-  const contentSection = htmlMode === "markdown"
-    ? `
+  const contentSection =
+    htmlMode === "markdown"
+      ? `
 # **Web Page Content (Markdown):**
 [start]
 ${content}
-[end]
-    `.trim()
-    : `
+[end]`.trim()
+      : `
 # **Web Page Content (Compressed HTML):**
-${content}
-    `.trim()
+${content}`.trim();
+
+  const customSection = basePrompt ? `
+# **Custom Instructions:**
+${basePrompt}`.trim() : "";
 
   return `
 ${SYSTEM_PROMPT}
 
 ${contentSection}
 
-# **Custom Instructions:**
-${basePrompt}
+${customSection}
   `.trim();
 }
 
-async function callModelApi(modelType, modelName, apiKey, prompt, chatHistory) {
+/**
+ * Calls the appropriate AI model API.
+ * @param {string} modelType - The type of model (e.g., "openai").
+ * @param {string} modelName - The specific model name.
+ * @param {string} apiKey - The API key.
+ * @param {string} prompt - The prompt to send.
+ * @param {Array} chatHistory - The chat history.
+ * @param {string} id - The message ID.
+ * @returns {Promise<AiResponse>} The AI response.
+ */
+async function callModelApi(modelType, modelName, apiKey, prompt, chatHistory, id) {
   switch (modelType) {
     case "openai":
-      return await callOpenAI(apiKey, modelName, prompt, chatHistory, true);
+      return await callOpenAI(apiKey, modelName, prompt, chatHistory, true, id);
     case "gemini":
-      return await callGemini(apiKey, modelName, prompt, chatHistory, true);
+      return await callGemini(apiKey, modelName, prompt, chatHistory, true, id);
     case "anthropic":
-      return await callAnthropic(apiKey, modelName, prompt, chatHistory, true);
+      return await callAnthropic(apiKey, modelName, prompt, chatHistory, true, id);
     default:
       throw new Error("Invalid model type.");
   }
 }
 
-function handleError(request, message, error = null) {
+/**
+ * Handles errors by logging and sending an error response.
+ * @param {string} id - The message ID.
+ * @param {object} request - The request.
+ * @param {string} message - The error message.
+ * @param {Error} [error] - The error object (optional).
+ */
+function handleError(id, request, message, error = null) {
   console.error(message, error || "");
   if (error) {
     message += `\n${error.stack || error}`;
   }
-  chrome.runtime.sendMessage({ action: "response_result", response: { content: message } }, request);
+  chrome.runtime.sendMessage({
+    action: "response_result",
+    response: { content: message },
+    request,
+    id,
+  });
 }
 
+/**
+ * Represents an AI response with content and token usage.
+ */
 class AiResponse {
   constructor(content, inputTokens, outputTokens) {
     this.content = content;
@@ -153,10 +248,16 @@ class AiResponse {
 }
 
 /**
- * Calls the OpenAI API.
- * Supports both full-response and streaming modes.
+ * Calls the OpenAI API with streaming support.
+ * @param {string} apiKey - The API key.
+ * @param {string} modelName - The model name.
+ * @param {string} prompt - The prompt.
+ * @param {Array} chatHistory - The chat history.
+ * @param {boolean} stream - Whether to stream the response.
+ * @param {object} id - The request.
+ * @returns {Promise<AiResponse>} The response.
  */
-async function callOpenAI(apiKey, modelName, prompt, chatHistory, stream = false) {
+async function callOpenAI(apiKey, modelName, prompt, chatHistory, stream = false, id) {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -167,10 +268,7 @@ async function callOpenAI(apiKey, modelName, prompt, chatHistory, stream = false
       model: modelName,
       stream,
       messages: [
-        {
-          role: "developer",
-          content: [{ type: "text", text: prompt }],
-        },
+        { role: "developer", content: prompt },
         ...chatHistory.map((msg) => ({
           role: { AI: "assistant", User: "user" }[msg.sender],
           content: [{ type: "text", text: msg.text }],
@@ -179,76 +277,68 @@ async function callOpenAI(apiKey, modelName, prompt, chatHistory, stream = false
     }),
   });
 
-  if (!response.ok) {
-    let errorMessage = `OpenAI API request failed with status ${response.status}`;
-    try {
-      const errorData = await response.json();
-      if (errorData.error?.message) {
-        errorMessage += `: ${errorData.error.message}`;
-      }
-    } catch (error) {
-      errorMessage += " (Failed to parse error response)";
-    }
-    throw new Error(errorMessage);
-  }
+  if (!response.ok) throw new Error(`OpenAI API failed: ${response.status}`);
 
   if (!stream) {
     const data = await response.json();
     const content = data.choices[0].message.content;
     const usage = data.usage || {};
     return new AiResponse(content, usage.prompt_tokens || 0, usage.completion_tokens || 0);
-  } else {
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-    let done = false;
-    let fullContent = "";
-    let totalInputTokens = null;
-    let totalOutputTokens = null;
+  }
 
-    while (!done) {
-      const { value, done: doneReading } = await reader.read();
-      done = doneReading;
-      if (value) {
-        const chunkText = decoder.decode(value, { stream: !done });
-        // Split by newlines (stream data is often sent line by line prefixed with "data:")
-        const lines = chunkText.split("\n").filter((line) => line.trim());
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const dataStr = line.slice(6).trim();
-            if (dataStr === "[DONE]") {
-              done = true;
-              break;
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let done = false;
+  let fullContent = "";
+  let totalInputTokens = null;
+  let totalOutputTokens = null;
+
+  while (!done) {
+    const { value, done: doneReading } = await reader.read();
+    done = doneReading;
+    if (value) {
+      const chunkText = decoder.decode(value, { stream: !done });
+      const lines = chunkText.split("\n").filter((line) => line.trim());
+      for (const line of lines) {
+        if (line.startsWith("data: ") && line !== "data: [DONE]") {
+          const dataStr = line.slice(6).trim();
+          try {
+            const parsed = JSON.parse(dataStr);
+            const contentPart = parsed.choices[0].delta?.content || "";
+            fullContent += contentPart;
+            chrome.runtime.sendMessage({
+              action: "stream_update",
+              chunk: contentPart,
+              id,
+            });
+
+            // Optionally update usage tokens if provided in this chunk.
+            // Token counts unavailable in streaming
+            if (parsed.usage) {
+              totalInputTokens = parsed.usage.prompt_tokens;
+              totalOutputTokens = parsed.usage.completion_tokens;
             }
-            try {
-              const parsed = JSON.parse(dataStr);
-              // Each parsed chunk is expected to have a structure like:
-              // { choices: [ { delta: { content: "..." } } ], usage: { prompt_tokens, completion_tokens } }
-              const delta = parsed.choices[0].delta;
-              const contentPart = delta?.content || "";
-              fullContent += contentPart;
-              // Send each chunk as a stream update message
-              chrome.runtime.sendMessage({ action: "stream_update", chunk: contentPart });
-              // Optionally update usage tokens if provided in this chunk. This is undefined at the moment.
-              if (parsed.usage) {
-                totalInputTokens = parsed.usage.prompt_tokens;
-                totalOutputTokens = parsed.usage.completion_tokens;
-              }
-            } catch (err) {
-              console.error("Error parsing stream chunk:", err);
-            }
+          } catch (err) {
+            console.error("Error parsing OpenAI stream chunk:", err);
           }
         }
       }
     }
-    return new AiResponse(fullContent, totalInputTokens, totalOutputTokens);
   }
+  return new AiResponse(fullContent, totalInputTokens, totalOutputTokens);
 }
 
 /**
- * Calls the Google Gemini API.
- * Supports both full-response and streaming modes.
+ * Calls the Google Gemini API with streaming support.
+ * @param {string} apiKey - The API key.
+ * @param {string} modelName - The model name.
+ * @param {string} prompt - The prompt.
+ * @param {Array} chatHistory - The chat history.
+ * @param {boolean} stream - Whether to stream the response.
+ * @param {string} id - The message ID.
+ * @returns {Promise<AiResponse>} The response.
  */
-async function callGemini(apiKey, modelName, prompt, chatHistory, stream = false) {
+async function callGemini(apiKey, modelName, prompt, chatHistory, stream = false, id) {
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:${
       stream ? "streamGenerateContent" : "generateContent"
@@ -268,21 +358,7 @@ async function callGemini(apiKey, modelName, prompt, chatHistory, stream = false
     }
   );
 
-  if (!response.ok) {
-    let errorMessage = `Gemini API request failed with status ${response.status}`;
-    try {
-      const errorData = await response.json();
-      errorMessage +=
-        "\n" +
-        errorData
-          .map((x) => x.error)
-          .map((x) => `${x.status}: ${x.message}`)
-          .join("\n");
-    } catch (error) {
-      errorMessage += " (Failed to parse error response)";
-    }
-    throw new Error(errorMessage);
-  }
+  if (!response.ok) throw new Error(`Gemini API failed: ${response.status}`);
 
   if (!stream) {
     const data = await response.json();
@@ -297,74 +373,77 @@ async function callGemini(apiKey, modelName, prompt, chatHistory, stream = false
       data.usageMetadata?.promptTokenCount || 0,
       data.usageMetadata?.candidatesTokenCount || 0
     );
-  } else {
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-    let done = false;
-    let fullContent = "";
-    let bufferedText = "";
-    let totalInputTokens = null;
-    let totalOutputTokens = null;
+  }
 
-    while (!done) {
-      const { value, done: doneReading } = await reader.read();
-      done = doneReading;
-      if (value) {
-        let chunkText = decoder.decode(value, { stream: !done }).trim();
-        // Remove leading "[" from the first chunk.
-        if (!bufferedText && chunkText.startsWith("[")) {
-          chunkText = chunkText.slice(1);
-        }
-        // Remove trailing "]%" from the final chunk.
-        if (done && chunkText.endsWith("]%")) {
-          chunkText = chunkText.slice(0, -2);
-        }
-        bufferedText += chunkText;
-        // Separate individual JSON objects ({ candidates: [...] }) by unit
-        let openBraces = 0;
-        let startIndex = -1;
-        for (let i = 0; i < bufferedText.length; i++) {
-          if (bufferedText[i] === "{") {
-            if (startIndex === -1) startIndex = i;
-            openBraces++;
-          } else if (bufferedText[i] === "}") {
-            openBraces--;
-            if (openBraces === 0) {
-              const jsonStr = bufferedText.slice(startIndex, i + 1);
-              try {
-                const parsed = JSON.parse(jsonStr);
-                const candidate = parsed.candidates?.[0];
-                const generatedText = candidate?.content?.parts
-                  ?.map((part) => part.text)
-                  .join("");
-                if (generatedText) {
-                  fullContent += generatedText;
-                  chrome.runtime.sendMessage({ action: "stream_update", chunk: generatedText });
-                }
-                // Update token counts if available
-                if (parsed.usageMetadata) {
-                  totalInputTokens += parsed.usageMetadata.promptTokenCount;
-                  totalOutputTokens += parsed.usageMetadata.candidatesTokenCount;
-                }
-                bufferedText = bufferedText.slice(i + 1).trim();
-                i = -1; // Restart loop for any remaining buffered text.
-                startIndex = -1;
-              } catch (err) {
-                console.warn("Failed to parse JSON part, waiting for more data:", bufferedText);
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let done = false;
+  let fullContent = "";
+  let bufferedText = "";
+  let totalInputTokens = null;
+  let totalOutputTokens = null;
+
+  while (!done) {
+    const { value, done: doneReading } = await reader.read();
+    done = doneReading;
+    if (value) {
+      let chunkText = decoder.decode(value, { stream: !done }).trim();
+      if (!bufferedText && chunkText.startsWith("[")) chunkText = chunkText.slice(1);
+      if (done && chunkText.endsWith("]%")) chunkText = chunkText.slice(0, -2);
+      bufferedText += chunkText;
+      // Separate individual JSON objects ({ candidates: [...] }) by unit
+      let openBraces = 0;
+      let startIndex = -1;
+      for (let i = 0; i < bufferedText.length; i++) {
+        if (bufferedText[i] === "{") {
+          if (startIndex === -1) startIndex = i;
+          openBraces++;
+        } else if (bufferedText[i] === "}") {
+          openBraces--;
+          if (openBraces === 0) {
+            const jsonStr = bufferedText.slice(startIndex, i + 1);
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const generatedText =
+                parsed.candidates?.[0].content?.parts?.map((part) => part.text).join("") || "";
+              if (generatedText) {
+                fullContent += generatedText;
+                chrome.runtime.sendMessage({
+                  action: "stream_update",
+                  chunk: generatedText,
+                  id,
+                });
               }
+              // Update token counts if available
+              if (parsed.usageMetadata) {
+                totalInputTokens += parsed.usageMetadata.promptTokenCount;
+                totalOutputTokens += parsed.usageMetadata.candidatesTokenCount;
+              }
+              bufferedText = bufferedText.slice(i + 1).trim();
+              i = -1;
+              startIndex = -1;
+            } catch (err) {
+              console.warn("Failed to parse Gemini chunk, buffering:", bufferedText);
             }
           }
         }
       }
     }
-    return new AiResponse(fullContent, totalInputTokens, totalOutputTokens);
   }
+  return new AiResponse(fullContent, totalInputTokens, totalOutputTokens);
 }
 
 /**
- * Calls the Anthropic API (non-streaming example).
+ * Calls the Anthropic API with streaming support.
+ * @param {string} apiKey - The API key.
+ * @param {string} modelName - The model name.
+ * @param {string} prompt - The prompt.
+ * @param {Array} chatHistory - The chat history.
+ * @param {boolean} stream - Whether to stream the response.
+ * @param {string} id - The message ID.
+ * @returns {Promise<AiResponse>} The response.
  */
-async function callAnthropic(apiKey, modelName, prompt, chatHistory, stream = false) {
+async function callAnthropic(apiKey, modelName, prompt, chatHistory, stream = false, id) {
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -381,96 +460,57 @@ async function callAnthropic(apiKey, modelName, prompt, chatHistory, stream = fa
         content: [{ type: "text", text: msg.text }],
       })),
       max_tokens: 300,
-      stream, // Enable streaming if true
+      stream,
     }),
   });
 
-  // Non-streaming mode: simply parse and return the response.
+  if (!response.ok) throw new Error(`Anthropic API failed: ${response.status}`);
+
   if (!stream) {
     const data = await response.json();
     const content = data.content[0].text;
     const usage = data.usage || {};
     return new AiResponse(content, usage.input_tokens || 0, usage.output_tokens || 0);
-  } else {
-    // Streaming mode: process server-sent events (SSE)
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-    let done = false;
-    let fullContent = "";
-    let totalInputTokens = 0;
-    let totalOutputTokens = 0;
+  }
 
-    while (!done) {
-      const { value, done: doneReading } = await reader.read();
-      done = doneReading;
-      if (value) {
-        // Decode the chunk into text
-        const chunkText = decoder.decode(value, { stream: !done });
-        // Split the chunk into individual lines (each SSE event is sent on a new line)
-        const lines = chunkText.split("\n").filter(line => line.trim() !== "");
-        for (const line of lines) {
-          // Anthropic SSE events are prefixed with "data: "
-          if (line.startsWith("data: ")) {
-            const dataStr = line.slice(6).trim();
-            try {
-              let parsed = JSON.parse(dataStr);
-              if (parsed.type === "message_start") {
-                parsed = parsed.message;
-              }
-              // Process content block deltas to extract text.
-              if (parsed.type === "content_block_delta") {
-                const delta = parsed.delta;
-                if (delta && delta.type === "text_delta" && delta.text) {
-                  fullContent += delta.text;
-                }
-              }
-              // Optionally update token counts from message_delta events.
-              if (parsed.usage) {
-                totalInputTokens += parsed.usage.input_tokens || totalInputTokens;
-                totalOutputTokens += parsed.usage.output_tokens || totalOutputTokens;
-              }
-            } catch (err) {
-              console.error("Error parsing stream chunk:", err);
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let done = false;
+  let fullContent = "";
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
+
+  while (!done) {
+    const { value, done: doneReading } = await reader.read();
+    done = doneReading;
+    if (value) {
+      const chunkText = decoder.decode(value, { stream: !done });
+      const lines = chunkText.split("\n").filter((line) => line.trim());
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const dataStr = line.slice(6).trim();
+          try {
+            let parsed = JSON.parse(dataStr);
+            if (parsed.type === "message_start") parsed = parsed.message;
+            if (parsed.type === "content_block_delta" && parsed.delta?.text) {
+              fullContent += parsed.delta.text;
+              chrome.runtime.sendMessage({
+                action: "stream_update",
+                chunk: parsed.delta.text,
+                id,
+              });
             }
+            // Optionally update token counts from message_delta events.
+            if (parsed.usage) {
+              totalInputTokens += parsed.usage.input_tokens || totalInputTokens;
+              totalOutputTokens += parsed.usage.output_tokens || totalOutputTokens;
+                          }
+          } catch (err) {
+            console.error("Error parsing Anthropic stream chunk:", err);
           }
         }
       }
     }
-    return new AiResponse(fullContent, totalInputTokens, totalOutputTokens);
   }
+  return new AiResponse(fullContent, totalInputTokens, totalOutputTokens);
 }
-
-/**
- * Calls the Ollama API (non-streaming example).
- */
-async function callOllama(modelName, systemPrompt, userPrompt) {
-  const response = await fetch("http://localhost:11434/api/generate", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: modelName,
-      prompt: `${systemPrompt}\n\n${userPrompt}`,
-      stream: false,
-    }),
-  });
-  const data = await response.json();
-  return new AiResponse(data.response, data.prompt_eval_count, data.eval_count);
-}
-
-
-
-// background.js
-chrome.runtime.onInstalled.addListener(() => {
-  // chrome.storage.sync.set({ selectedModel: "gpt-4o" });
-  console.log("Extension Installed or Updated!");
-});
-
-
-// // 개발 모드에서 자동 새로고침
-// if (chrome.runtime.id) {
-//   setInterval(() => {
-//     chrome.runtime.reload();
-//   }, 2000); // 2초마다 자동 리로드
-// }
